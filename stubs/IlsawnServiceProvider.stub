@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Providers;
+
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ServiceProvider;
+
+class IlsawnServiceProvider extends ServiceProvider
+{
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        $this->gate();
+    }
+
+    /**
+     * Register the Ilsawn gate.
+     *
+     * This gate controls who can access the Ilsawn translation management UI.
+     * Add the email addresses of users who should have access, or replace the
+     * closure body with any authorization logic you prefer.
+     */
+    protected function gate(): void
+    {
+        Gate::define('viewIlsawn', function ($user) {
+            return in_array($user->email, [
+                //
+            ]);
+        });
+    }
+}

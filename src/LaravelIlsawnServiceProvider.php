@@ -2,6 +2,7 @@
 
 namespace ilsawn\LaravelIlsawn;
 
+use ilsawn\LaravelIlsawn\Commands\InstallCommand;
 use ilsawn\LaravelIlsawn\Commands\LaravelIlsawnCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -10,16 +11,39 @@ class LaravelIlsawnServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
-        /*
-         * This class is a Package Service Provider
-         *
-         * More info: https://github.com/spatie/laravel-package-tools
-         */
         $package
             ->name('laravel-ilsawn')
-            ->hasConfigFile()
+            /*
+             * Registers config/ilsawn.php and makes it publishable under the
+             * "laravel-ilsawn-config" tag. Values are accessible via config('ilsawn.*').
+             * The filename argument must match the config file name, not the package name.
+             */
+            ->hasConfigFile('ilsawn')
+            /*
+             * Registers the package's Blade / Livewire views under the "laravel-ilsawn"
+             * namespace, publishable via the "laravel-ilsawn-views" tag.
+             */
             ->hasViews()
-            ->hasMigration('create_laravel_ilsawn_table')
-            ->hasCommand(LaravelIlsawnCommand::class);
+            ->hasCommands(InstallCommand::class, LaravelIlsawnCommand::class);
+    }
+
+    public function packageRegistered(): void
+    {
+        /*
+         * Bind the core service as a singleton. The closure is resolved lazily,
+         * so config() values are always fully merged before the service is built.
+         */
+        $this->app->singleton(LaravelIlsawn::class, function (): LaravelIlsawn {
+            return new LaravelIlsawn(
+                csvPath: base_path((string) config('ilsawn.csv_path', 'lang/ilsawn.csv')),
+                delimiter: (string) config('ilsawn.delimiter', ';'),
+                locales: (array) config('ilsawn.locales', ['en']),
+                defaultLocale: (string) config('ilsawn.default_locale', 'en'),
+                scanPaths: array_map(
+                    fn (string $path) => base_path($path),
+                    (array) config('ilsawn.scan_paths', ['app', 'resources'])
+                ),
+            );
+        });
     }
 }
