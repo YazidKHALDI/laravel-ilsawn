@@ -2,9 +2,9 @@
 
 namespace ilsawn\LaravelIlsawn;
 
+use ilsawn\LaravelIlsawn\Commands\LaravelIlsawnCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use ilsawn\LaravelIlsawn\Commands\LaravelIlsawnCommand;
 
 class LaravelIlsawnServiceProvider extends PackageServiceProvider
 {
