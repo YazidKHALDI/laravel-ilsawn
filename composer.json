@@ -4,7 +4,12 @@
     "keywords": [
         "ilsawn",
         "laravel",
-        "laravel-ilsawn"
+        "laravel-ilsawn",
+        "translation",
+        "i18n",
+        "localization",
+        "csv",
+        "multilingual"
     ],
     "homepage": "https://github.com/yazidkhaldi/laravel-ilsawn",
     "license": "MIT",
@@ -16,7 +21,7 @@
         }
     ],
     "require": {
-        "php": "^8.4",
+        "php": "^8.2",
         "spatie/laravel-package-tools": "^1.16",
         "illuminate/contracts": "^11.0||^12.0"
     },
@@ -34,8 +39,7 @@
     },
     "autoload": {
         "psr-4": {
-            "ilsawn\\LaravelIlsawn\\": "src/",
-            "ilsawn\\LaravelIlsawn\\Database\\Factories\\": "database/factories/"
+            "ilsawn\\LaravelIlsawn\\": "src/"
         }
     },
     "autoload-dev": {
@@ -63,10 +67,7 @@
         "laravel": {
             "providers": [
                 "ilsawn\\LaravelIlsawn\\LaravelIlsawnServiceProvider"
-            ],
-            "aliases": {
-                "LaravelIlsawn": "ilsawn\\LaravelIlsawn\\Facades\\LaravelIlsawn"
-            }
+            ]
         }
     },
     "minimum-stability": "dev",
