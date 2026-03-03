@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace ilsawn\LaravelIlsawn\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class LaravelIlsawnCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'laravel-ilsawn';
 
     public $description = 'My command';
 
