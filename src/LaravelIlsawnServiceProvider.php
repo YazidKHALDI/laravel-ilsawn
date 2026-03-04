@@ -4,6 +4,10 @@ namespace ilsawn\LaravelIlsawn;
 
 use ilsawn\LaravelIlsawn\Commands\InstallCommand;
 use ilsawn\LaravelIlsawn\Commands\LaravelIlsawnCommand;
+use ilsawn\LaravelIlsawn\Http\Middleware\Authorize;
+use ilsawn\LaravelIlsawn\Livewire\TranslationsTable;
+use Illuminate\Support\Facades\Route;
+use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -38,6 +42,10 @@ class LaravelIlsawnServiceProvider extends PackageServiceProvider
         $this->publishes([
             __DIR__ . '/../resources/js' => resource_path('js/vendor/ilsawn'),
         ], 'laravel-ilsawn-js');
+
+        Livewire::component('ilsawn-translations-table', TranslationsTable::class);
+
+        $this->registerRoutes();
     }
 
     public function packageRegistered(): void
@@ -58,5 +66,17 @@ class LaravelIlsawnServiceProvider extends PackageServiceProvider
                 ),
             );
         });
+    }
+
+    private function registerRoutes(): void
+    {
+        Route::middleware(
+            array_merge(
+                (array) config('ilsawn.middleware', ['web']),
+                [Authorize::class]
+            )
+        )
+            ->prefix((string) config('ilsawn.route_prefix', 'ilsawn'))
+            ->group(__DIR__ . '/../routes/web.php');
     }
 }
