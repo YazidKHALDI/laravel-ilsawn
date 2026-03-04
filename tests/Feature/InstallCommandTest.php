@@ -134,7 +134,6 @@ it('overwrites an existing IlsawnServiceProvider when --force is passed', functi
 // ---------------------------------------------------------------------------
 
 it('publishes JS hooks and prints instructions when Inertia is installed', function () {
-    // Fake a composer.json with inertiajs/inertia-laravel in require
     $composerPath = base_path('composer.json');
     $original     = file_exists($composerPath) ? file_get_contents($composerPath) : null;
 
@@ -146,12 +145,37 @@ it('publishes JS hooks and prints instructions when Inertia is installed', funct
         ->expectsOutputToContain('resources/js/vendor/ilsawn')
         ->assertSuccessful();
 
-    // Restore original composer.json
     if ($original !== null) {
         file_put_contents($composerPath, $original);
     } else {
         @unlink($composerPath);
     }
+});
+
+it('shows only the detected framework adapter import', function () {
+    $composerPath = base_path('composer.json');
+    $packagePath  = base_path('package.json');
+    $original     = file_exists($composerPath) ? file_get_contents($composerPath) : null;
+
+    file_put_contents($composerPath, json_encode([
+        'require' => ['inertiajs/inertia-laravel' => '^1.0'],
+    ]));
+    file_put_contents($packagePath, json_encode([
+        'dependencies' => ['react' => '^18.0'],
+    ]));
+
+    $this->artisan('ilsawn:install')
+        ->expectsOutputToContain('adapters/react')
+        ->doesntExpectOutputToContain('adapters/vue')
+        ->doesntExpectOutputToContain('adapters/svelte')
+        ->assertSuccessful();
+
+    if ($original !== null) {
+        file_put_contents($composerPath, $original);
+    } else {
+        @unlink($composerPath);
+    }
+    @unlink($packagePath);
 });
 
 it('does not print JS hook instructions when Inertia is not installed', function () {

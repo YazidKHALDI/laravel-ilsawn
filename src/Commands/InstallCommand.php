@@ -157,16 +157,26 @@ class InstallCommand extends Command
 
         $this->line('<info>✓</info> JS hooks published → <comment>resources/js/vendor/ilsawn/</comment>');
         $this->newLine();
-        $this->comment('Import the adapter that matches your frontend:');
-        $this->line('  React  → <comment>import { useLang } from \'@/vendor/ilsawn/adapters/react\';</comment>');
-        $this->line('  Vue 3  → <comment>import { useLang } from \'@/vendor/ilsawn/adapters/vue\';</comment>');
-        $this->line('  Svelte → <comment>import { useLang } from \'@/vendor/ilsawn/adapters/svelte\';</comment>');
+
+        $adapter = $this->detectJsFramework();
+
+        if ($adapter !== null) {
+            [$label, $path] = $adapter;
+            $this->comment("Import the {$label} adapter:");
+            $this->line("  <comment>import { useLang } from '@/vendor/ilsawn/adapters/{$path}';</comment>");
+        } else {
+            $this->comment('Import the adapter that matches your frontend:');
+            $this->line('  React  → <comment>import { useLang } from \'@/vendor/ilsawn/adapters/react\';</comment>');
+            $this->line('  Vue 3  → <comment>import { useLang } from \'@/vendor/ilsawn/adapters/vue\';</comment>');
+            $this->line('  Svelte → <comment>import { useLang } from \'@/vendor/ilsawn/adapters/svelte\';</comment>');
+        }
+
         $this->newLine();
         $this->line('  Then use <comment>__(\'key\')</comment> — same as PHP.');
     }
 
     // -------------------------------------------------------------------------
-    // Inertia detection
+    // Inertia / JS framework detection
     // -------------------------------------------------------------------------
 
     private function inertiaIsInstalled(): bool
@@ -185,5 +195,44 @@ class InstallCommand extends Command
 
         return isset($composer['require']['inertiajs/inertia-laravel'])
             || isset($composer['require-dev']['inertiajs/inertia-laravel']);
+    }
+
+    /**
+     * Detect the JS framework from package.json.
+     *
+     * @return array{0: string, 1: string}|null  [label, adapter path] or null if unknown
+     */
+    private function detectJsFramework(): ?array
+    {
+        $packagePath = base_path('package.json');
+
+        if (! File::exists($packagePath)) {
+            return null;
+        }
+
+        $package = json_decode(File::get($packagePath), true);
+
+        if (! is_array($package)) {
+            return null;
+        }
+
+        $deps = array_merge(
+            (array) ($package['dependencies'] ?? []),
+            (array) ($package['devDependencies'] ?? []),
+        );
+
+        if (isset($deps['react'])) {
+            return ['React', 'react'];
+        }
+
+        if (isset($deps['vue'])) {
+            return ['Vue 3', 'vue'];
+        }
+
+        if (isset($deps['svelte'])) {
+            return ['Svelte', 'svelte'];
+        }
+
+        return null;
     }
 }
