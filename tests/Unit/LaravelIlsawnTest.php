@@ -271,7 +271,7 @@ it('detects keys in PHP files that are absent from the CSV', function () {
         ->and($result['missing'])->not->toContain('existing.key');
 });
 
-it('detects keys in JS/TS files using t() and __()', function () {
+it('detects keys in JS/TS files using __() and t()', function () {
     writeCsvFile($this->csvPath, [['key', 'en', 'fr', 'ar']]);
     file_put_contents(
         $this->scanPath . '/app.tsx',

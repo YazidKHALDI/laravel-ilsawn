@@ -128,3 +128,45 @@ it('overwrites an existing IlsawnServiceProvider when --force is passed', functi
 
     expect(file_get_contents($providerPath))->not->toBe('// existing provider');
 });
+
+// ---------------------------------------------------------------------------
+// JS hooks
+// ---------------------------------------------------------------------------
+
+it('prints JS hook instructions when Inertia is installed', function () {
+    // Fake a composer.json with inertiajs/inertia-laravel in require
+    $composerPath = base_path('composer.json');
+    $original     = file_exists($composerPath) ? file_get_contents($composerPath) : null;
+
+    file_put_contents($composerPath, json_encode([
+        'require' => ['inertiajs/inertia-laravel' => '^1.0'],
+    ]));
+
+    $this->artisan('ilsawn:install')
+        ->expectsOutputToContain('laravel-ilsawn-js')
+        ->assertSuccessful();
+
+    // Restore original composer.json
+    if ($original !== null) {
+        file_put_contents($composerPath, $original);
+    } else {
+        @unlink($composerPath);
+    }
+});
+
+it('does not print JS hook instructions when Inertia is not installed', function () {
+    $composerPath = base_path('composer.json');
+    $original     = file_exists($composerPath) ? file_get_contents($composerPath) : null;
+
+    file_put_contents($composerPath, json_encode(['require' => []]));
+
+    $this->artisan('ilsawn:install')
+        ->doesntExpectOutputToContain('laravel-ilsawn-js')
+        ->assertSuccessful();
+
+    if ($original !== null) {
+        file_put_contents($composerPath, $original);
+    } else {
+        @unlink($composerPath);
+    }
+});

@@ -26,6 +26,8 @@ class InstallCommand extends Command
         if ($this->inertiaIsInstalled()) {
             $this->newLine();
             $this->printInertiaInstructions();
+            $this->newLine();
+            $this->printJsHookInstructions();
         }
 
         $this->newLine();
@@ -144,6 +146,21 @@ class InstallCommand extends Command
         $this->line('  <comment>        ]);</comment>');
         $this->line('  <comment>    }</comment>');
         $this->line('  <comment>}</comment>');
+    }
+
+    private function printJsHookInstructions(): void
+    {
+        $this->comment('Publish the JS hooks to your project:');
+        $this->line('  <comment>php artisan vendor:publish --tag=laravel-ilsawn-js</comment>');
+        $this->newLine();
+        $this->line('  Files are copied to <info>resources/js/vendor/ilsawn/</info>.');
+        $this->line('  Import the adapter that matches your frontend:');
+        $this->newLine();
+        $this->line('  React  → <comment>import { useLang } from \'@/vendor/ilsawn/adapters/react\';</comment>');
+        $this->line('  Vue 3  → <comment>import { useLang } from \'@/vendor/ilsawn/adapters/vue\';</comment>');
+        $this->line('  Svelte → <comment>import { useLang } from \'@/vendor/ilsawn/adapters/svelte\';</comment>');
+        $this->newLine();
+        $this->line('  Then use <comment>__(\'key\')</comment> — same as PHP.');
     }
 
     // -------------------------------------------------------------------------

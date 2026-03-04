@@ -59,7 +59,7 @@ return [
     |
     | Directories scanned by ilsawn:generate to collect translation keys from
     | your source code. Paths are relative to base_path(). The scanner detects
-    | calls to t(), __(), trans(), @lang(), and the Livewire/Blade equivalents.
+    | PHP/Blade calls (__(), trans(), @lang()) and JS/TS calls (__(), t()).
     |
     */
     'scan_paths' => [

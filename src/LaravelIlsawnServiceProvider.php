@@ -27,6 +27,19 @@ class LaravelIlsawnServiceProvider extends PackageServiceProvider
             ->hasCommands(InstallCommand::class, LaravelIlsawnCommand::class);
     }
 
+    public function bootingPackage(): void
+    {
+        /*
+         * Publish the JS hooks under the "laravel-ilsawn-js" tag so users can
+         * copy only the adapter(s) they need:
+         *
+         *   php artisan vendor:publish --tag=laravel-ilsawn-js
+         */
+        $this->publishes([
+            __DIR__ . '/../resources/js' => resource_path('js/vendor/ilsawn'),
+        ], 'laravel-ilsawn-js');
+    }
+
     public function packageRegistered(): void
     {
         /*
