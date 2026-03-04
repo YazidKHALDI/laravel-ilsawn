@@ -69,6 +69,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Scan Exclude Paths
+    |--------------------------------------------------------------------------
+    |
+    | Paths (relative to base_path()) that should be excluded from key scanning.
+    | The ilsawn JS adapter files are excluded by default because they reference
+    | __() as a function definition, not as actual translation calls.
+    |
+    */
+    'scan_exclude' => [
+        'resources/js/vendor/ilsawn',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | UI Route Prefix
     |--------------------------------------------------------------------------
     |

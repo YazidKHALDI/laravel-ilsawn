@@ -133,7 +133,7 @@ it('overwrites an existing IlsawnServiceProvider when --force is passed', functi
 // JS hooks
 // ---------------------------------------------------------------------------
 
-it('prints JS hook instructions when Inertia is installed', function () {
+it('publishes JS hooks and prints instructions when Inertia is installed', function () {
     // Fake a composer.json with inertiajs/inertia-laravel in require
     $composerPath = base_path('composer.json');
     $original     = file_exists($composerPath) ? file_get_contents($composerPath) : null;
@@ -143,7 +143,7 @@ it('prints JS hook instructions when Inertia is installed', function () {
     ]));
 
     $this->artisan('ilsawn:install')
-        ->expectsOutputToContain('laravel-ilsawn-js')
+        ->expectsOutputToContain('resources/js/vendor/ilsawn')
         ->assertSuccessful();
 
     // Restore original composer.json

@@ -64,6 +64,10 @@ class LaravelIlsawnServiceProvider extends PackageServiceProvider
                     fn (string $path) => base_path($path),
                     (array) config('ilsawn.scan_paths', ['app', 'resources'])
                 ),
+                excludePaths: array_map(
+                    fn (string $path) => base_path($path),
+                    (array) config('ilsawn.scan_exclude', ['resources/js/vendor/ilsawn'])
+                ),
             );
         });
     }

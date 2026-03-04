@@ -21,8 +21,9 @@ class LaravelIlsawn
     private array $loadedLangFiles = [];
 
     /**
-     * @param string[] $locales     Locale codes that map to CSV columns (e.g. ['en','fr','ar'])
-     * @param string[] $scanPaths   Absolute paths to scan for translation key references
+     * @param string[] $locales       Locale codes that map to CSV columns (e.g. ['en','fr','ar'])
+     * @param string[] $scanPaths     Absolute paths to scan for translation key references
+     * @param string[] $excludePaths  Absolute paths to skip during scanning
      */
     public function __construct(
         private readonly string $csvPath,
@@ -30,6 +31,7 @@ class LaravelIlsawn
         private readonly array $locales,
         private readonly string $defaultLocale,
         private readonly array $scanPaths,
+        private readonly array $excludePaths = [],
     ) {}
 
     // -------------------------------------------------------------------------
@@ -320,8 +322,21 @@ class LaravelIlsawn
             }
 
             foreach (File::allFiles($scanPath) as $file) {
+                $realPath = $file->getRealPath();
+
+                $excluded = false;
+                foreach ($this->excludePaths as $excludePath) {
+                    if (str_starts_with($realPath, $excludePath . DIRECTORY_SEPARATOR) || $realPath === $excludePath) {
+                        $excluded = true;
+                        break;
+                    }
+                }
+                if ($excluded) {
+                    continue;
+                }
+
                 $ext     = $file->getExtension();
-                $content = File::get($file->getRealPath());
+                $content = File::get($realPath);
 
                 if (in_array($ext, $phpExtensions, true)) {
                     preg_match_all(

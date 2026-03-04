@@ -150,12 +150,14 @@ class InstallCommand extends Command
 
     private function printJsHookInstructions(): void
     {
-        $this->comment('Publish the JS hooks to your project:');
-        $this->line('  <comment>php artisan vendor:publish --tag=laravel-ilsawn-js</comment>');
+        $this->callSilently('vendor:publish', [
+            '--tag'   => 'laravel-ilsawn-js',
+            '--force' => $this->option('force'),
+        ]);
+
+        $this->line('<info>✓</info> JS hooks published → <comment>resources/js/vendor/ilsawn/</comment>');
         $this->newLine();
-        $this->line('  Files are copied to <info>resources/js/vendor/ilsawn/</info>.');
-        $this->line('  Import the adapter that matches your frontend:');
-        $this->newLine();
+        $this->comment('Import the adapter that matches your frontend:');
         $this->line('  React  → <comment>import { useLang } from \'@/vendor/ilsawn/adapters/react\';</comment>');
         $this->line('  Vue 3  → <comment>import { useLang } from \'@/vendor/ilsawn/adapters/vue\';</comment>');
         $this->line('  Svelte → <comment>import { useLang } from \'@/vendor/ilsawn/adapters/svelte\';</comment>');
