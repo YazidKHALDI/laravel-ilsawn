@@ -122,8 +122,12 @@ class LaravelIlsawnCommand extends Command
 
         $this->info('JSON locale files generated successfully.');
 
-        Artisan::call('optimize:clear');
-        $this->info('Cache cleared.');
+        try {
+            Artisan::call('optimize:clear');
+            $this->info('Cache cleared.');
+        } catch (\Throwable) {
+            // cache:clear may fail if the database cache table doesn't exist yet
+        }
 
         return self::SUCCESS;
     }

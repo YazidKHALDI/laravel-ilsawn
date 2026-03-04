@@ -28,5 +28,6 @@ class TestCase extends Orchestra
     {
         // Required for Livewire sessions and encryption
         $app['config']->set('app.key', 'base64:' . base64_encode(random_bytes(32)));
+        $app['config']->set('cache.default', 'array');
     }
 }
