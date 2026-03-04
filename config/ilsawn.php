@@ -42,6 +42,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | CSV Backups
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, ilsawn:generate creates a timestamped backup of the CSV
+    | before generating JSON files. Set backup_limit to the maximum number of
+    | backup files to keep; older ones are deleted automatically. Set to 0 to
+    | keep all backups indefinitely.
+    |
+    */
+    'backup'       => true,
+    'backup_limit' => 5,
+
+    /*
+    |--------------------------------------------------------------------------
     | CSV Delimiter
     |--------------------------------------------------------------------------
     |

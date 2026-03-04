@@ -15,14 +15,19 @@
                 <span wire:loading.remove wire:target="scan">Scan for new keys</span>
                 <span wire:loading wire:target="scan">Scanning…</span>
             </button>
-            <button
-                wire:click="generate"
-                wire:loading.attr="disabled"
-                class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-            >
-                <span wire:loading.remove wire:target="generate">Generate JSON</span>
-                <span wire:loading wire:target="generate">Generating…</span>
-            </button>
+            <div class="relative">
+                <button
+                    wire:click="generate"
+                    wire:loading.attr="disabled"
+                    class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                >
+                    <span wire:loading.remove wire:target="generate">Generate JSON</span>
+                    <span wire:loading wire:target="generate">Generating…</span>
+                </button>
+                @if($needsGenerate)
+                    <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></span>
+                @endif
+            </div>
         </div>
     </div>
 

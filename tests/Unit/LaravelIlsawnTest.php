@@ -140,6 +140,48 @@ it('backup is an exact copy of the original', function () {
     expect(file_get_contents($backupPath))->toBe(file_get_contents($this->csvPath));
 });
 
+it('pruneBackups deletes oldest files beyond the limit', function () {
+    writeCsvFile($this->csvPath, [['key', 'en']]);
+
+    // Create 5 backups with distinct timestamps
+    $paths = [];
+    for ($i = 1; $i <= 5; $i++) {
+        $path = $this->csvPath . '.backup.2026-01-0' . $i . '-00-00-00';
+        file_put_contents($path, "backup {$i}");
+        $paths[] = $path;
+    }
+
+    $this->service->pruneBackups(3);
+
+    expect(file_exists($paths[0]))->toBeFalse() // oldest deleted
+        ->and(file_exists($paths[1]))->toBeFalse()
+        ->and(file_exists($paths[2]))->toBeTrue()  // newest 3 kept
+        ->and(file_exists($paths[3]))->toBeTrue()
+        ->and(file_exists($paths[4]))->toBeTrue();
+
+    foreach ($paths as $p) {
+        @unlink($p);
+    }
+});
+
+it('pruneBackups keeps all files when limit is 0', function () {
+    writeCsvFile($this->csvPath, [['key', 'en']]);
+
+    $paths = [];
+    for ($i = 1; $i <= 5; $i++) {
+        $path = $this->csvPath . '.backup.2026-01-0' . $i . '-00-00-00';
+        file_put_contents($path, "backup {$i}");
+        $paths[] = $path;
+    }
+
+    $this->service->pruneBackups(0);
+
+    foreach ($paths as $p) {
+        expect(file_exists($p))->toBeTrue();
+        @unlink($p);
+    }
+});
+
 // ---------------------------------------------------------------------------
 // generateJsonFiles
 // ---------------------------------------------------------------------------

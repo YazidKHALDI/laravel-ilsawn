@@ -140,6 +140,23 @@ it('generate action sets a confirmation message', function () {
         ->assertSet('message', 'JSON files generated.');
 });
 
+it('sets needsGenerate after saving a row', function () {
+    Livewire::test(TranslationsTable::class)
+        ->call('startEdit', 'bye')
+        ->set('editingValues.fr', 'Au revoir')
+        ->call('saveRow')
+        ->assertSet('needsGenerate', true);
+});
+
+it('clears needsGenerate after generate', function () {
+    Livewire::test(TranslationsTable::class)
+        ->call('startEdit', 'bye')
+        ->set('editingValues.fr', 'Au revoir')
+        ->call('saveRow')
+        ->call('generate')
+        ->assertSet('needsGenerate', false);
+});
+
 it('scan action sets a confirmation message', function () {
     Livewire::test(TranslationsTable::class)
         ->call('scan')

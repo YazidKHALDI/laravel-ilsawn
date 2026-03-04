@@ -25,6 +25,8 @@ class TranslationsTable extends Component
 
     public ?string $message = null;
 
+    public bool $needsGenerate = false;
+
     // -------------------------------------------------------------------------
     // Computed
     // -------------------------------------------------------------------------
@@ -98,6 +100,7 @@ class TranslationsTable extends Component
         $this->editingKey    = null;
         $this->editingValues = [];
         $this->message       = 'Row saved.';
+        $this->needsGenerate = true;
         unset($this->rows); // bust computed cache
     }
 
@@ -108,7 +111,8 @@ class TranslationsTable extends Component
     public function generate(): void
     {
         Artisan::call('ilsawn:generate');
-        $this->message = 'JSON files generated.';
+        $this->message       = 'JSON files generated.';
+        $this->needsGenerate = false;
     }
 
     public function scan(): void

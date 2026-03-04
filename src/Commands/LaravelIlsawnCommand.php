@@ -32,12 +32,9 @@ class LaravelIlsawnCommand extends Command
             return self::FAILURE;
         }
 
-        $willModify = $this->option('scan')
-            || $this->option('cleanup')
-            || $this->option('remove-duplicates');
-
-        if ($willModify && ! $isDryRun) {
+        if (! $isDryRun && config('ilsawn.backup', true)) {
             $this->info('Backup created: ' . $this->ilsawn->backupCsv());
+            $this->ilsawn->pruneBackups((int) config('ilsawn.backup_limit', 5));
         }
 
         $csvData       = $this->ilsawn->loadCsv();

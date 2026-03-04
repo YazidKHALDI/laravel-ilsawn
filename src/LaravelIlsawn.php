@@ -59,6 +59,32 @@ class LaravelIlsawn
     }
 
     /**
+     * Delete the oldest CSV backups, keeping only the $limit most recent ones.
+     * Does nothing when $limit is 0 (keep all).
+     */
+    public function pruneBackups(int $limit): void
+    {
+        if ($limit <= 0) {
+            return;
+        }
+
+        $pattern = $this->csvPath . '.backup.*';
+        $files   = glob($pattern);
+
+        if ($files === false || count($files) <= $limit) {
+            return;
+        }
+
+        sort($files); // ascending by name = chronological (timestamped)
+
+        $toDelete = array_slice($files, 0, count($files) - $limit);
+
+        foreach ($toDelete as $file) {
+            File::delete($file);
+        }
+    }
+
+    /**
      * Load the CSV into a list of rows keyed by locale.
      *
      * Expected CSV format (first row is the header):
