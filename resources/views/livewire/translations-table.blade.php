@@ -1,4 +1,4 @@
-<div class="min-h-screen p-6">
+<div class="min-h-screen p-6" wire:init="checkPendingKeys">
 
     {{-- Header --}}
     <div class="flex items-center justify-between mb-6">
@@ -31,18 +31,34 @@
         </div>
     </div>
 
-    {{-- Flash message --}}
-    @if($message)
-        <div
-            x-data="{ show: true }"
-            x-init="setTimeout(() => show = false, 3000)"
-            x-show="show"
-            x-transition.opacity
-            class="mb-4 px-4 py-2 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg"
-        >
-            {{ $message }}
+    {{-- Pending scan warning --}}
+    @if($pendingScanCount > 0)
+        <div class="mb-4 px-4 py-2 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
+            <span>⚠ <strong>{{ $pendingScanCount }} key{{ $pendingScanCount > 1 ? 's' : '' }}</strong> found in your code are not in the CSV yet.</span>
+            <button wire:click="scan" class="ml-4 text-xs font-semibold underline hover:no-underline">Scan now</button>
         </div>
     @endif
+
+    {{-- Flash message --}}
+    <div
+        x-data="{ show: false, message: '', type: 'success' }"
+        x-on:flash.window="
+            message = $event.detail.message;
+            type    = $event.detail.type;
+            show    = true;
+            setTimeout(() => show = false, 4000)
+        "
+        x-show="show"
+        x-transition.opacity
+        :class="{
+            'text-green-800 bg-green-100 border-green-200': type === 'success',
+            'text-red-800 bg-red-100 border-red-200':       type === 'error',
+            'text-amber-800 bg-amber-100 border-amber-200': type === 'warning'
+        }"
+        class="mb-4 px-4 py-2 text-sm border rounded-lg"
+    >
+        <span x-text="message"></span>
+    </div>
 
     {{-- Search --}}
     <div class="mb-4">
@@ -74,11 +90,30 @@
                             <td class="px-4 py-2 font-mono text-xs text-gray-700">{{ $row['key'] }}</td>
                             @foreach($this->locales as $locale)
                                 <td class="px-4 py-2">
-                                    <input
-                                        wire:model="editingValues.{{ $locale }}"
-                                        type="text"
-                                        class="w-full px-2 py-1 text-sm border border-indigo-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    >
+                                    <div class="flex gap-1 items-center">
+                                        <input
+                                            wire:model="editingValues.{{ $locale }}"
+                                            type="text"
+                                            class="w-full px-2 py-1 text-sm border border-indigo-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        >
+                                        <button
+                                            wire:click="copyKeyAsTranslation('{{ $locale }}')"
+                                            title="Use key as translation"
+                                            class="shrink-0 px-1.5 py-1 text-xs font-semibold text-gray-500 border border-gray-200 rounded hover:bg-gray-50"
+                                        >=</button>
+                                        @if($this->aiAvailable && $locale !== config('ilsawn.default_locale', 'en'))
+                                            <button
+                                                wire:click="autoTranslate('{{ $locale }}')"
+                                                wire:loading.attr="disabled"
+                                                wire:target="autoTranslate('{{ $locale }}')"
+                                                title="Auto-translate with AI"
+                                                class="shrink-0 px-1.5 py-1 text-xs font-semibold text-indigo-600 border border-indigo-300 rounded hover:bg-indigo-50 disabled:opacity-50"
+                                            >
+                                                <span wire:loading.remove wire:target="autoTranslate('{{ $locale }}')">AI</span>
+                                                <span wire:loading wire:target="autoTranslate('{{ $locale }}')">…</span>
+                                            </button>
+                                        @endif
+                                    </div>
                                 </td>
                             @endforeach
                             <td class="px-4 py-2">
@@ -110,7 +145,7 @@
                             @endforeach
                             <td class="px-4 py-3">
                                 <button
-                                    wire:click="startEdit('{{ $row['key'] }}')"
+                                    wire:click="startEdit({{ Js::from($row['key']) }})"
                                     class="px-2 py-1 text-xs font-medium text-gray-600 border border-gray-200 rounded hover:bg-gray-100"
                                 >Edit</button>
                             </td>

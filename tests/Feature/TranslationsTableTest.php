@@ -137,7 +137,7 @@ it('clears edit state after saving', function () {
 it('generate action sets a confirmation message', function () {
     Livewire::test(TranslationsTable::class)
         ->call('generate')
-        ->assertSet('message', 'JSON files generated.');
+        ->assertDispatched('flash', message: 'JSON files generated.', type: 'success');
 });
 
 it('sets needsGenerate after saving a row', function () {
@@ -157,8 +157,22 @@ it('clears needsGenerate after generate', function () {
         ->assertSet('needsGenerate', false);
 });
 
+it('copyKeyAsTranslation copies the key into the target locale', function () {
+    Livewire::test(TranslationsTable::class)
+        ->call('startEdit', 'hello')
+        ->call('copyKeyAsTranslation', 'fr')
+        ->assertSet('editingValues.fr', 'hello');
+});
+
+it('autoTranslate is a no-op when laravel/ai is not installed', function () {
+    Livewire::test(TranslationsTable::class)
+        ->call('startEdit', 'hello')
+        ->call('autoTranslate', 'fr')
+        ->assertSet('editingValues.fr', 'Bonjour'); // unchanged — laravel/ai not installed
+});
+
 it('scan action sets a confirmation message', function () {
     Livewire::test(TranslationsTable::class)
         ->call('scan')
-        ->assertSet('message', 'Scan complete — new keys added to CSV.');
+        ->assertDispatched('flash', message: 'Scan complete — new keys added to CSV.', type: 'success');
 });

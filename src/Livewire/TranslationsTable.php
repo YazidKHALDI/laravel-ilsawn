@@ -12,6 +12,7 @@ use Livewire\Component;
 /**
  * @property-read array<int, array<string, string>> $rows
  * @property-read string[] $locales
+ * @property-read bool $aiAvailable
  */
 #[Layout('ilsawn::layout')]
 class TranslationsTable extends Component
@@ -23,9 +24,9 @@ class TranslationsTable extends Component
     /** @var array<string, string> */
     public array $editingValues = [];
 
-    public ?string $message = null;
-
     public bool $needsGenerate = false;
+
+    public int $pendingScanCount = 0;
 
     // -------------------------------------------------------------------------
     // Computed
@@ -58,6 +59,12 @@ class TranslationsTable extends Component
     public function locales(): array
     {
         return (array) config('ilsawn.locales', ['en']);
+    }
+
+    #[Computed]
+    public function aiAvailable(): bool
+    {
+        return class_exists('Laravel\Ai\Enums\Lab');
     }
 
     // -------------------------------------------------------------------------
@@ -99,9 +106,9 @@ class TranslationsTable extends Component
 
         $this->editingKey    = null;
         $this->editingValues = [];
-        $this->message       = 'Row saved.';
         $this->needsGenerate = true;
         unset($this->rows); // bust computed cache
+        $this->flash('Row saved.');
     }
 
     // -------------------------------------------------------------------------
@@ -111,15 +118,62 @@ class TranslationsTable extends Component
     public function generate(): void
     {
         Artisan::call('ilsawn:generate');
-        $this->message       = 'JSON files generated.';
         $this->needsGenerate = false;
+        $this->flash('JSON files generated.');
+    }
+
+    public function copyKeyAsTranslation(string $locale): void
+    {
+        if ($this->editingKey === null) {
+            return;
+        }
+
+        $this->editingValues[$locale] = $this->editingKey;
+    }
+
+    public function autoTranslate(string $locale): void
+    {
+        if (! $this->aiAvailable) {
+            return;
+        }
+
+        $sourceLocale = (string) config('ilsawn.default_locale', 'en');
+        $sourceText   = $this->editingValues[$sourceLocale] ?? '';
+
+        if (empty($sourceText)) {
+            $this->flash('Add a source translation first.', 'warning');
+
+            return;
+        }
+
+        try {
+            /** @phpstan-ignore function.notFound */
+            $result = \Laravel\Ai\agent(
+                instructions: 'You are a professional translator. Translate the given text accurately. Return only the translated text, nothing else — no quotes, no explanation.',
+            )->prompt("Translate to locale \"{$locale}\": {$sourceText}");
+
+            $this->editingValues[$locale] = (string) $result;
+        } catch (\Throwable $e) {
+            $this->flash($e->getMessage(), 'error');
+        }
+    }
+
+    public function checkPendingKeys(): void
+    {
+        $ilsawn  = app(LaravelIlsawn::class);
+        $csvData = $ilsawn->loadCsv();
+
+        ['missing' => $missing] = $ilsawn->scanForNewKeys($csvData);
+
+        $this->pendingScanCount = count($missing);
     }
 
     public function scan(): void
     {
         Artisan::call('ilsawn:generate', ['--scan' => true]);
-        $this->message = 'Scan complete — new keys added to CSV.';
         unset($this->rows);
+        $this->pendingScanCount = 0;
+        $this->flash('Scan complete — new keys added to CSV.');
     }
 
     // -------------------------------------------------------------------------
@@ -130,5 +184,14 @@ class TranslationsTable extends Component
     {
         /** @phpstan-ignore argument.type */
         return view('ilsawn::livewire.translations-table');
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    private function flash(string $message, string $type = 'success'): void
+    {
+        $this->dispatch('flash', message: $message, type: $type);
     }
 }
