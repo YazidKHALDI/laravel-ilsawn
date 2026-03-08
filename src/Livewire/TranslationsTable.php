@@ -2,9 +2,9 @@
 
 namespace ilsawn\LaravelIlsawn\Livewire;
 
-use ilsawn\LaravelIlsawn\LaravelIlsawn;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\View\View;
+use ilsawn\LaravelIlsawn\LaravelIlsawn;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -18,6 +18,8 @@ use Livewire\Component;
 class TranslationsTable extends Component
 {
     public string $search = '';
+
+    public bool $onlyMissing = false;
 
     public ?string $editingKey = null;
 
@@ -40,16 +42,24 @@ class TranslationsTable extends Component
     {
         $all = app(LaravelIlsawn::class)->loadCsv();
 
-        if ($this->search === '') {
-            return $all;
+        $locales = $this->locales;
+
+        if ($this->search !== '') {
+            $needle = strtolower($this->search);
+            $all = array_values(array_filter(
+                $all,
+                fn (array $row) => str_contains(strtolower($row['key']), $needle)
+            ));
         }
 
-        $needle = strtolower($this->search);
+        if ($this->onlyMissing) {
+            $all = array_values(array_filter(
+                $all,
+                fn (array $row) => collect($locales)->some(fn (string $locale) => ($row[$locale] ?? '') === '')
+            ));
+        }
 
-        return array_values(array_filter(
-            $all,
-            fn (array $row) => str_contains(strtolower($row['key']), $needle)
-        ));
+        return $all;
     }
 
     /**
@@ -79,20 +89,20 @@ class TranslationsTable extends Component
             return;
         }
 
-        $this->editingKey    = $key;
+        $this->editingKey = $key;
         $this->editingValues = array_diff_key($row, ['key' => '']);
     }
 
     public function cancelEdit(): void
     {
-        $this->editingKey    = null;
+        $this->editingKey = null;
         $this->editingValues = [];
     }
 
     public function saveRow(): void
     {
         $ilsawn = app(LaravelIlsawn::class);
-        $rows   = $ilsawn->loadCsv();
+        $rows = $ilsawn->loadCsv();
 
         $rows = array_map(function (array $row): array {
             if ($row['key'] === $this->editingKey) {
@@ -104,7 +114,7 @@ class TranslationsTable extends Component
 
         $ilsawn->saveCsv($rows);
 
-        $this->editingKey    = null;
+        $this->editingKey = null;
         $this->editingValues = [];
         $this->needsGenerate = true;
         unset($this->rows); // bust computed cache
@@ -138,7 +148,7 @@ class TranslationsTable extends Component
         }
 
         $sourceLocale = (string) config('ilsawn.default_locale', 'en');
-        $sourceText   = $this->editingValues[$sourceLocale] ?? '';
+        $sourceText = $this->editingValues[$sourceLocale] ?? '';
 
         if (empty($sourceText)) {
             $this->flash('Add a source translation first.', 'warning');
@@ -160,7 +170,7 @@ class TranslationsTable extends Component
 
     public function checkPendingKeys(): void
     {
-        $ilsawn  = app(LaravelIlsawn::class);
+        $ilsawn = app(LaravelIlsawn::class);
         $csvData = $ilsawn->loadCsv();
 
         ['missing' => $missing] = $ilsawn->scanForNewKeys($csvData);

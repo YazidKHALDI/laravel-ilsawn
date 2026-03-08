@@ -6,22 +6,25 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Apply this trait to your HandleInertiaRequests middleware to automatically
- * share the active locale's translations as Inertia shared data.
+ * Add this trait to your existing HandleInertiaRequests middleware to
+ * automatically share the active locale's translations as Inertia shared data.
  *
- * Usage:
+ * Open app/Http/Middleware/HandleInertiaRequests.php and make two additions:
  *
+ *   // 1. Import the trait
  *   use ilsawn\LaravelIlsawn\SharesTranslations;
  *
  *   class HandleInertiaRequests extends Middleware
  *   {
- *       use SharesTranslations;
+ *       use SharesTranslations; // ← add this
  *
  *       public function share(Request $request): array
  *       {
- *           return array_merge(parent::share($request), [
- *               'translations' => $this->translations($request),
- *           ]);
+ *           return [
+ *               ...parent::share($request),
+ *               // ... your existing props ...
+ *               'translations' => $this->translations($request), // ← add this
+ *           ];
  *       }
  *   }
  *

@@ -1,29 +1,29 @@
 <?php
 
-use ilsawn\LaravelIlsawn\LaravelIlsawn;
 use Illuminate\Support\Facades\File;
+use ilsawn\LaravelIlsawn\LaravelIlsawn;
 
 // ---------------------------------------------------------------------------
 // Setup / teardown
 // ---------------------------------------------------------------------------
 
 beforeEach(function () {
-    $this->tmpDir   = sys_get_temp_dir() . '/ilsawn-' . uniqid();
-    $this->csvPath  = $this->tmpDir . '/ilsawn.csv';
-    $this->scanPath = $this->tmpDir . '/scan';
+    $this->tmpDir = sys_get_temp_dir().'/ilsawn-'.uniqid();
+    $this->csvPath = $this->tmpDir.'/ilsawn.csv';
+    $this->scanPath = $this->tmpDir.'/scan';
 
     File::makeDirectory($this->scanPath, 0755, true);
-    File::makeDirectory($this->tmpDir . '/lang', 0755, true);
+    File::makeDirectory($this->tmpDir.'/lang', 0755, true);
 
     // Redirect lang_path() so generateJsonFiles() writes inside our temp dir
-    $this->app->useLangPath($this->tmpDir . '/lang');
+    $this->app->useLangPath($this->tmpDir.'/lang');
 
     $this->service = new LaravelIlsawn(
-        csvPath:       $this->csvPath,
-        delimiter:     ';',
-        locales:       ['en', 'fr', 'ar'],
+        csvPath: $this->csvPath,
+        delimiter: ';',
+        locales: ['en', 'fr', 'ar'],
         defaultLocale: 'en',
-        scanPaths:     [$this->scanPath],
+        scanPaths: [$this->scanPath],
     );
 });
 
@@ -60,9 +60,9 @@ it('loads rows with all locale columns', function () {
     expect($data)->toHaveCount(1)
         ->and($data[0])->toBe([
             'key' => 'hello',
-            'en'  => 'Hello',
-            'fr'  => 'Bonjour',
-            'ar'  => 'مرحبا',
+            'en' => 'Hello',
+            'fr' => 'Bonjour',
+            'ar' => 'مرحبا',
         ]);
 });
 
@@ -146,7 +146,7 @@ it('pruneBackups deletes oldest files beyond the limit', function () {
     // Create 5 backups with distinct timestamps
     $paths = [];
     for ($i = 1; $i <= 5; $i++) {
-        $path = $this->csvPath . '.backup.2026-01-0' . $i . '-00-00-00';
+        $path = $this->csvPath.'.backup.2026-01-0'.$i.'-00-00-00';
         file_put_contents($path, "backup {$i}");
         $paths[] = $path;
     }
@@ -169,7 +169,7 @@ it('pruneBackups keeps all files when limit is 0', function () {
 
     $paths = [];
     for ($i = 1; $i <= 5; $i++) {
-        $path = $this->csvPath . '.backup.2026-01-0' . $i . '-00-00-00';
+        $path = $this->csvPath.'.backup.2026-01-0'.$i.'-00-00-00';
         file_put_contents($path, "backup {$i}");
         $paths[] = $path;
     }
@@ -245,7 +245,7 @@ it('outputs JSON keys sorted alphabetically', function () {
     ]);
 
     $written = $this->service->generateJsonFiles($this->service->loadCsv());
-    $keys    = array_keys(json_decode(file_get_contents($written['en']), true));
+    $keys = array_keys(json_decode(file_get_contents($written['en']), true));
 
     expect($keys)->toBe(['alpha', 'zoo']);
 });
@@ -255,7 +255,7 @@ it('outputs JSON keys sorted alphabetically', function () {
 // ---------------------------------------------------------------------------
 
 it('appends an empty row per missing key with one column per locale', function () {
-    $data   = [['key' => 'existing', 'en' => 'Existing', 'fr' => '', 'ar' => '']];
+    $data = [['key' => 'existing', 'en' => 'Existing', 'fr' => '', 'ar' => '']];
     $result = $this->service->addMissingKeys($data, ['new.key']);
     $newRow = collect($result)->firstWhere('key', 'new.key');
 
@@ -264,7 +264,7 @@ it('appends an empty row per missing key with one column per locale', function (
 });
 
 it('does not add a key that already exists', function () {
-    $data   = [['key' => 'existing', 'en' => 'Existing', 'fr' => '', 'ar' => '']];
+    $data = [['key' => 'existing', 'en' => 'Existing', 'fr' => '', 'ar' => '']];
     $result = $this->service->addMissingKeys($data, ['existing']);
 
     expect($result)->toHaveCount(1);
@@ -287,7 +287,7 @@ it('removes only the specified keys', function () {
 });
 
 it('returns all rows untouched when no keys match', function () {
-    $data   = [['key' => 'hello', 'en' => 'Hello', 'fr' => '', 'ar' => '']];
+    $data = [['key' => 'hello', 'en' => 'Hello', 'fr' => '', 'ar' => '']];
     $result = $this->service->removeKeys($data, ['nonexistent']);
 
     expect($result)->toHaveCount(1);
@@ -303,7 +303,7 @@ it('detects keys in PHP files that are absent from the CSV', function () {
         ['existing.key', 'Existing', '', ''],
     ]);
     file_put_contents(
-        $this->scanPath . '/test.php',
+        $this->scanPath.'/test.php',
         '<?php echo __("existing.key"); echo __("new.key");'
     );
 
@@ -316,7 +316,7 @@ it('detects keys in PHP files that are absent from the CSV', function () {
 it('detects keys in JS/TS files using __() and t()', function () {
     writeCsvFile($this->csvPath, [['key', 'en', 'fr', 'ar']]);
     file_put_contents(
-        $this->scanPath . '/app.tsx',
+        $this->scanPath.'/app.tsx',
         'const a = t("welcome.title"); const b = __("nav.home");'
     );
 
@@ -329,10 +329,10 @@ it('detects keys in JS/TS files using __() and t()', function () {
 it('marks keys as skipped when they exist in Laravel own lang files', function () {
     $langDir = base_path('lang/en');
     File::makeDirectory($langDir, 0755, true);
-    File::put($langDir . '/auth.php', "<?php return ['failed' => 'Credentials do not match.'];");
+    File::put($langDir.'/auth.php', "<?php return ['failed' => 'Credentials do not match.'];");
 
     writeCsvFile($this->csvPath, [['key', 'en', 'fr', 'ar']]);
-    file_put_contents($this->scanPath . '/test.php', '<?php echo __("failed");');
+    file_put_contents($this->scanPath.'/test.php', '<?php echo __("failed");');
 
     $result = $this->service->scanForNewKeys($this->service->loadCsv());
 
@@ -352,7 +352,7 @@ it('detects CSV keys not referenced in any source file', function () {
         ['used.key',   'Used',   '', ''],
         ['unused.key', 'Unused', '', ''],
     ]);
-    file_put_contents($this->scanPath . '/test.php', '<?php echo __("used.key");');
+    file_put_contents($this->scanPath.'/test.php', '<?php echo __("used.key");');
 
     $unused = $this->service->findUnusedKeys($this->service->loadCsv());
 
@@ -365,7 +365,7 @@ it('returns an empty array when all keys are used', function () {
         ['key', 'en', 'fr', 'ar'],
         ['hello', 'Hello', '', ''],
     ]);
-    file_put_contents($this->scanPath . '/test.php', '<?php echo __("hello");');
+    file_put_contents($this->scanPath.'/test.php', '<?php echo __("hello");');
 
     expect($this->service->findUnusedKeys($this->service->loadCsv()))->toBeEmpty();
 });
@@ -377,7 +377,7 @@ it('returns an empty array when all keys are used', function () {
 it('detects CSV keys that duplicate keys in Laravel lang files', function () {
     $langDir = base_path('lang/en');
     File::makeDirectory($langDir, 0755, true);
-    File::put($langDir . '/auth.php', "<?php return ['failed' => 'Credentials do not match.'];");
+    File::put($langDir.'/auth.php', "<?php return ['failed' => 'Credentials do not match.'];");
 
     writeCsvFile($this->csvPath, [
         ['key', 'en', 'fr', 'ar'],

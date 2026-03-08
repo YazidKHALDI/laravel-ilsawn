@@ -21,9 +21,9 @@ class LaravelIlsawn
     private array $loadedLangFiles = [];
 
     /**
-     * @param string[] $locales       Locale codes that map to CSV columns (e.g. ['en','fr','ar'])
-     * @param string[] $scanPaths     Absolute paths to scan for translation key references
-     * @param string[] $excludePaths  Absolute paths to skip during scanning
+     * @param  string[]  $locales  Locale codes that map to CSV columns (e.g. ['en','fr','ar'])
+     * @param  string[]  $scanPaths  Absolute paths to scan for translation key references
+     * @param  string[]  $excludePaths  Absolute paths to skip during scanning
      */
     public function __construct(
         private readonly string $csvPath,
@@ -52,7 +52,7 @@ class LaravelIlsawn
      */
     public function backupCsv(): string
     {
-        $backupPath = $this->csvPath . '.backup.' . date('Y-m-d-H-i-s');
+        $backupPath = $this->csvPath.'.backup.'.date('Y-m-d-H-i-s');
         File::copy($this->csvPath, $backupPath);
 
         return $backupPath;
@@ -68,8 +68,8 @@ class LaravelIlsawn
             return;
         }
 
-        $pattern = $this->csvPath . '.backup.*';
-        $files   = glob($pattern);
+        $pattern = $this->csvPath.'.backup.*';
+        $files = glob($pattern);
 
         if ($files === false || count($files) <= $limit) {
             return;
@@ -132,7 +132,7 @@ class LaravelIlsawn
      * Persist CSV data to disk, sorted alphabetically by key.
      * Writes the header row first, then one data row per entry.
      *
-     * @param array<int, array<string, string>> $data
+     * @param  array<int, array<string, string>>  $data
      */
     public function saveCsv(array $data): void
     {
@@ -172,7 +172,7 @@ class LaravelIlsawn
      * Returns a map of locale => absolute file path for each file written,
      * so the caller can log or display which files were generated.
      *
-     * @param  array<int, array<string, string>> $csvData
+     * @param  array<int, array<string, string>>  $csvData
      * @return array<string, string>
      */
     public function generateJsonFiles(array $csvData): array
@@ -183,7 +183,7 @@ class LaravelIlsawn
         $output = array_fill_keys($this->locales, []);
 
         foreach ($csvData as $row) {
-            $key          = $row['key'];
+            $key = $row['key'];
             $defaultValue = ($row[$this->defaultLocale] ?? '') !== ''
                 ? $row[$this->defaultLocale]
                 : $key;
@@ -219,13 +219,13 @@ class LaravelIlsawn
      *  - 'skipped'  → keys omitted because they already exist in Laravel's
      *                 own lang files (mapped to the conflicting filename)
      *
-     * @param  array<int, array<string, string>> $csvData
+     * @param  array<int, array<string, string>>  $csvData
      * @return array{missing: string[], skipped: array<string, string>}
      */
     public function scanForNewKeys(array $csvData): array
     {
         $existingKeys = array_column($csvData, 'key');
-        $foundKeys    = array_unique($this->scanSourceFiles());
+        $foundKeys = array_unique($this->scanSourceFiles());
 
         $this->loadStandardLangFiles();
 
@@ -248,13 +248,13 @@ class LaravelIlsawn
     /**
      * Return CSV keys that are not referenced in any source file.
      *
-     * @param  array<int, array<string, string>> $csvData
+     * @param  array<int, array<string, string>>  $csvData
      * @return string[]
      */
     public function findUnusedKeys(array $csvData): array
     {
         $existingKeys = array_column($csvData, 'key');
-        $usedKeys     = array_unique($this->scanSourceFiles());
+        $usedKeys = array_unique($this->scanSourceFiles());
 
         return array_values(array_diff($existingKeys, $usedKeys));
     }
@@ -263,7 +263,7 @@ class LaravelIlsawn
      * Return existing CSV keys that duplicate keys in Laravel's built-in lang files,
      * mapped to the filename where the conflict was found.
      *
-     * @param  array<int, array<string, string>> $csvData
+     * @param  array<int, array<string, string>>  $csvData
      * @return array<string, string>
      */
     public function findDuplicatesInLangFiles(array $csvData): array
@@ -286,8 +286,8 @@ class LaravelIlsawn
      * Append an empty row per missing key (one column per locale).
      * Keys that already exist in $data are skipped.
      *
-     * @param  array<int, array<string, string>> $data
-     * @param  string[] $missingKeys
+     * @param  array<int, array<string, string>>  $data
+     * @param  string[]  $missingKeys
      * @return array<int, array<string, string>>
      */
     public function addMissingKeys(array $data, array $missingKeys): array
@@ -310,8 +310,8 @@ class LaravelIlsawn
     /**
      * Return $data with every row whose key appears in $keys removed.
      *
-     * @param  array<int, array<string, string>> $data
-     * @param  string[] $keys
+     * @param  array<int, array<string, string>>  $data
+     * @param  string[]  $keys
      * @return array<int, array<string, string>>
      */
     public function removeKeys(array $data, array $keys): array
@@ -338,7 +338,7 @@ class LaravelIlsawn
     private function scanSourceFiles(): array
     {
         $phpExtensions = ['php'];
-        $jsExtensions  = ['js', 'jsx', 'ts', 'tsx', 'vue', 'svelte'];
+        $jsExtensions = ['js', 'jsx', 'ts', 'tsx', 'vue', 'svelte'];
 
         $keys = [];
 
@@ -352,7 +352,7 @@ class LaravelIlsawn
 
                 $excluded = false;
                 foreach ($this->excludePaths as $excludePath) {
-                    if (str_starts_with($realPath, $excludePath . DIRECTORY_SEPARATOR) || $realPath === $excludePath) {
+                    if (str_starts_with($realPath, $excludePath.DIRECTORY_SEPARATOR) || $realPath === $excludePath) {
                         $excluded = true;
                         break;
                     }
@@ -361,7 +361,7 @@ class LaravelIlsawn
                     continue;
                 }
 
-                $ext     = $file->getExtension();
+                $ext = $file->getExtension();
                 $content = File::get($realPath);
 
                 if (in_array($ext, $phpExtensions, true)) {
@@ -433,7 +433,7 @@ class LaravelIlsawn
     /**
      * Recursively check whether $key (dot-notation aware) exists in $translations.
      *
-     * @param array<string, mixed> $translations
+     * @param  array<string, mixed>  $translations
      */
     private function keyExistsIn(string $key, array $translations, string $prefix = ''): bool
     {

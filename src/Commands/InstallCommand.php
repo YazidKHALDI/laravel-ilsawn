@@ -28,6 +28,9 @@ class InstallCommand extends Command
             $this->printInertiaInstructions();
             $this->newLine();
             $this->printJsHookInstructions();
+        } else {
+            $this->newLine();
+            $this->printBladeJsInstructions();
         }
 
         $this->newLine();
@@ -44,7 +47,7 @@ class InstallCommand extends Command
     private function publishConfig(): void
     {
         $this->callSilently('vendor:publish', [
-            '--tag'   => 'laravel-ilsawn-config',
+            '--tag' => 'laravel-ilsawn-config',
             '--force' => $this->option('force'),
         ]);
 
@@ -69,7 +72,7 @@ class InstallCommand extends Command
         $csvPath = base_path((string) config('ilsawn.csv_path', 'lang/ilsawn.csv'));
 
         if (File::exists($csvPath) && ! $this->option('force')) {
-            $this->line('<comment>⚠</comment>  CSV already exists, skipping → <comment>' . $csvPath . '</comment>');
+            $this->line('<comment>⚠</comment>  CSV already exists, skipping → <comment>'.$csvPath.'</comment>');
 
             return;
         }
@@ -77,7 +80,7 @@ class InstallCommand extends Command
         File::ensureDirectoryExists(dirname($csvPath));
 
         $delimiter = (string) config('ilsawn.delimiter', ';');
-        $locales   = (array) config('ilsawn.locales', ['en']);
+        $locales = (array) config('ilsawn.locales', ['en']);
 
         $handle = fopen($csvPath, 'w');
 
@@ -90,7 +93,7 @@ class InstallCommand extends Command
         fputcsv($handle, array_merge(['key'], $locales), $delimiter);
         fclose($handle);
 
-        $this->line('<info>✓</info> CSV created → <comment>' . $csvPath . '</comment>');
+        $this->line('<info>✓</info> CSV created → <comment>'.$csvPath.'</comment>');
     }
 
     private function publishProvider(): void
@@ -104,7 +107,7 @@ class InstallCommand extends Command
         }
 
         File::ensureDirectoryExists(app_path('Providers'));
-        File::copy(__DIR__ . '/../../stubs/IlsawnServiceProvider.stub', $destination);
+        File::copy(__DIR__.'/../../stubs/IlsawnServiceProvider.stub', $destination);
 
         $this->line('<info>✓</info> Gate provider published → <comment>app/Providers/IlsawnServiceProvider.php</comment>');
     }
@@ -131,27 +134,49 @@ class InstallCommand extends Command
     {
         $this->comment('Inertia.js detected — share translations with your frontend:');
         $this->newLine();
-        $this->line('  Open <info>app/Http/Middleware/HandleInertiaRequests.php</info> and apply the trait:');
+        $this->line('  Open <info>app/Http/Middleware/HandleInertiaRequests.php</info> and make two additions:');
         $this->newLine();
-        $this->line('  <comment>use ilsawn\LaravelIlsawn\SharesTranslations;</comment>');
+        $this->line('  1. Add the trait import at the top of the class:');
+        $this->line('     <comment>use ilsawn\LaravelIlsawn\SharesTranslations;</comment>');
         $this->newLine();
-        $this->line('  <comment>class HandleInertiaRequests extends Middleware</comment>');
-        $this->line('  <comment>{</comment>');
-        $this->line('  <comment>    use SharesTranslations;</comment>');
+        $this->line('  2. Use the trait and add translations to your share() method:');
+        $this->line('     <comment>use SharesTranslations; // ← add this inside the class</comment>');
         $this->newLine();
-        $this->line('  <comment>    public function share(Request $request): array</comment>');
-        $this->line('  <comment>    {</comment>');
-        $this->line('  <comment>        return array_merge(parent::share($request), [</comment>');
-        $this->line('  <comment>            \'translations\' => $this->translations($request),</comment>');
-        $this->line('  <comment>        ]);</comment>');
-        $this->line('  <comment>    }</comment>');
-        $this->line('  <comment>}</comment>');
+        $this->line('     <comment>public function share(Request $request): array</comment>');
+        $this->line('     <comment>{</comment>');
+        $this->line('     <comment>    return [</comment>');
+        $this->line('     <comment>        ...parent::share($request),</comment>');
+        $this->line('     <comment>        // ... your existing props ...</comment>');
+        $this->line('     <comment>        \'translations\' => $this->translations($request), // ← add this</comment>');
+        $this->line('     <comment>    ];</comment>');
+        $this->line('     <comment>}</comment>');
+    }
+
+    private function printBladeJsInstructions(): void
+    {
+        $this->callSilently('vendor:publish', [
+            '--tag' => 'laravel-ilsawn-js',
+            '--force' => $this->option('force'),
+        ]);
+
+        $this->line('<info>✓</info> JS hooks published → <comment>resources/js/vendor/ilsawn/</comment>');
+        $this->newLine();
+        $this->comment('Blade / Alpine.js — use translations in JS:');
+        $this->newLine();
+        $this->line('  1. Add to your main layout <info><head></info>:');
+        $this->line('     <comment>@ilsawnTranslations</comment>');
+        $this->newLine();
+        $this->line('  2. Import the adapter in your JS entry file:');
+        $this->line("     <comment>import '@/vendor/ilsawn/adapters/blade';</comment>");
+        $this->newLine();
+        $this->line('  Then <comment>__(\'key\')</comment> works everywhere, including Alpine.js expressions:');
+        $this->line('     <comment>x-text="__(\'dashboard.title\')"</comment>');
     }
 
     private function printJsHookInstructions(): void
     {
         $this->callSilently('vendor:publish', [
-            '--tag'   => 'laravel-ilsawn-js',
+            '--tag' => 'laravel-ilsawn-js',
             '--force' => $this->option('force'),
         ]);
 
@@ -200,7 +225,7 @@ class InstallCommand extends Command
     /**
      * Detect the JS framework from package.json.
      *
-     * @return array{0: string, 1: string}|null  [label, adapter path] or null if unknown
+     * @return array{0: string, 1: string}|null [label, adapter path] or null if unknown
      */
     private function detectJsFramework(): ?array
     {

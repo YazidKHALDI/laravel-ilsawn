@@ -27,17 +27,17 @@ class LaravelIlsawnCommand extends Command
         $isDryRun = (bool) $this->option('dry-run');
 
         if (! File::exists($this->ilsawn->csvPath())) {
-            $this->error('CSV file not found: ' . $this->ilsawn->csvPath());
+            $this->error('CSV file not found: '.$this->ilsawn->csvPath());
 
             return self::FAILURE;
         }
 
         if (! $isDryRun && config('ilsawn.backup', true)) {
-            $this->info('Backup created: ' . $this->ilsawn->backupCsv());
+            $this->info('Backup created: '.$this->ilsawn->backupCsv());
             $this->ilsawn->pruneBackups((int) config('ilsawn.backup_limit', 5));
         }
 
-        $csvData       = $this->ilsawn->loadCsv();
+        $csvData = $this->ilsawn->loadCsv();
         $originalCount = count($csvData);
 
         if ($this->option('remove-duplicates')) {
@@ -45,7 +45,7 @@ class LaravelIlsawnCommand extends Command
             $duplicates = $this->ilsawn->findDuplicatesInLangFiles($csvData);
 
             if (! empty($duplicates)) {
-                $this->warn('Found ' . count($duplicates) . ' duplicate key(s).');
+                $this->warn('Found '.count($duplicates).' duplicate key(s).');
 
                 if ($isDryRun) {
                     $this->table(
@@ -71,7 +71,7 @@ class LaravelIlsawnCommand extends Command
             }
 
             if (! empty($missing)) {
-                $this->info('Found ' . count($missing) . ' missing key(s).');
+                $this->info('Found '.count($missing).' missing key(s).');
 
                 if ($isDryRun) {
                     $this->table(['Missing Key'], array_map(fn ($k) => [$k], $missing));
@@ -89,7 +89,7 @@ class LaravelIlsawnCommand extends Command
             $unused = $this->ilsawn->findUnusedKeys($csvData);
 
             if (! empty($unused)) {
-                $this->warn('Found ' . count($unused) . ' unused key(s).');
+                $this->warn('Found '.count($unused).' unused key(s).');
 
                 if ($isDryRun) {
                     $this->table(['Unused Key'], array_map(fn ($k) => [$k], $unused));

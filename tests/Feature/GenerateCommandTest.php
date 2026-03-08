@@ -22,7 +22,7 @@ afterEach(function () {
         @unlink(lang_path("{$locale}.json"));
     }
 
-    foreach (glob($this->csvPath . '.backup.*') ?: [] as $backup) {
+    foreach (glob($this->csvPath.'.backup.*') ?: [] as $backup) {
         @unlink($backup);
     }
 });

@@ -51,7 +51,7 @@ return [
     | keep all backups indefinitely.
     |
     */
-    'backup'       => true,
+    'backup' => true,
     'backup_limit' => 5,
 
     /*

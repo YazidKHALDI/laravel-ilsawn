@@ -12,7 +12,7 @@ uses(TestCase::class)->in(__DIR__);
  * Write rows to a CSV file using the given delimiter.
  * Each item in $rows is a plain array of column values (including the header).
  *
- * @param array<int, array<int, string>> $rows
+ * @param  array<int, array<int, string>>  $rows
  */
 function writeCsvFile(string $path, array $rows, string $delimiter = ';'): void
 {

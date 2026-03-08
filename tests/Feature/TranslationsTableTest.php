@@ -1,8 +1,8 @@
 <?php
 
-use ilsawn\LaravelIlsawn\Livewire\TranslationsTable;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
+use ilsawn\LaravelIlsawn\Livewire\TranslationsTable;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -34,7 +34,7 @@ afterEach(function () {
 // ---------------------------------------------------------------------------
 
 it('returns 200 at the configured route prefix', function () {
-    $user = new \Illuminate\Foundation\Auth\User();
+    $user = new \Illuminate\Foundation\Auth\User;
 
     $this->actingAs($user)->get('/ilsawn')->assertOk();
 });
@@ -42,7 +42,7 @@ it('returns 200 at the configured route prefix', function () {
 it('returns 403 when the viewIlsawn gate denies access', function () {
     Gate::define('viewIlsawn', fn () => false);
 
-    $user = new \Illuminate\Foundation\Auth\User();
+    $user = new \Illuminate\Foundation\Auth\User;
 
     $this->actingAs($user)->get('/ilsawn')->assertForbidden();
 });
@@ -110,9 +110,9 @@ it('saves updated values to the CSV', function () {
         ->set('editingValues.fr', 'Au revoir')
         ->call('saveRow');
 
-    $handle   = fopen($this->csvPath, 'r');
-    $rows     = [];
-    $header   = fgetcsv($handle, 0, ';');
+    $handle = fopen($this->csvPath, 'r');
+    $rows = [];
+    $header = fgetcsv($handle, 0, ';');
     while (($row = fgetcsv($handle, 0, ';')) !== false) {
         $rows[] = array_combine($header, $row);
     }

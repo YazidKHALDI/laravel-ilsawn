@@ -65,8 +65,8 @@ it('creates the CSV file at the configured path', function () {
 it('writes a correct header row to the CSV', function () {
     $this->artisan('ilsawn:install');
 
-    $csvPath  = base_path((string) config('ilsawn.csv_path', 'lang/ilsawn.csv'));
-    $handle   = fopen($csvPath, 'r');
+    $csvPath = base_path((string) config('ilsawn.csv_path', 'lang/ilsawn.csv'));
+    $handle = fopen($csvPath, 'r');
     $firstRow = fgetcsv($handle, 0, (string) config('ilsawn.delimiter', ';'));
     fclose($handle);
 
@@ -135,7 +135,7 @@ it('overwrites an existing IlsawnServiceProvider when --force is passed', functi
 
 it('publishes JS hooks and prints instructions when Inertia is installed', function () {
     $composerPath = base_path('composer.json');
-    $original     = file_exists($composerPath) ? file_get_contents($composerPath) : null;
+    $original = file_exists($composerPath) ? file_get_contents($composerPath) : null;
 
     file_put_contents($composerPath, json_encode([
         'require' => ['inertiajs/inertia-laravel' => '^1.0'],
@@ -154,8 +154,8 @@ it('publishes JS hooks and prints instructions when Inertia is installed', funct
 
 it('shows only the detected framework adapter import', function () {
     $composerPath = base_path('composer.json');
-    $packagePath  = base_path('package.json');
-    $original     = file_exists($composerPath) ? file_get_contents($composerPath) : null;
+    $packagePath = base_path('package.json');
+    $original = file_exists($composerPath) ? file_get_contents($composerPath) : null;
 
     file_put_contents($composerPath, json_encode([
         'require' => ['inertiajs/inertia-laravel' => '^1.0'],
@@ -178,14 +178,15 @@ it('shows only the detected framework adapter import', function () {
     @unlink($packagePath);
 });
 
-it('does not print JS hook instructions when Inertia is not installed', function () {
+it('prints Blade/Alpine JS instructions when Inertia is not installed', function () {
     $composerPath = base_path('composer.json');
-    $original     = file_exists($composerPath) ? file_get_contents($composerPath) : null;
+    $original = file_exists($composerPath) ? file_get_contents($composerPath) : null;
 
     file_put_contents($composerPath, json_encode(['require' => []]));
 
     $this->artisan('ilsawn:install')
-        ->doesntExpectOutputToContain('laravel-ilsawn-js')
+        ->expectsOutputToContain('@ilsawnTranslations')
+        ->doesntExpectOutputToContain('HandleInertiaRequests')
         ->assertSuccessful();
 
     if ($original !== null) {

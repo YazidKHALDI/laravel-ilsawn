@@ -2,11 +2,12 @@
 
 namespace ilsawn\LaravelIlsawn;
 
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 use ilsawn\LaravelIlsawn\Commands\InstallCommand;
 use ilsawn\LaravelIlsawn\Commands\LaravelIlsawnCommand;
 use ilsawn\LaravelIlsawn\Http\Middleware\Authorize;
 use ilsawn\LaravelIlsawn\Livewire\TranslationsTable;
-use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -40,10 +41,23 @@ class LaravelIlsawnServiceProvider extends PackageServiceProvider
          *   php artisan vendor:publish --tag=laravel-ilsawn-js
          */
         $this->publishes([
-            __DIR__ . '/../resources/js' => resource_path('js/vendor/ilsawn'),
+            __DIR__.'/../resources/js' => resource_path('js/vendor/ilsawn'),
         ], 'laravel-ilsawn-js');
 
         Livewire::component('ilsawn-translations-table', TranslationsTable::class);
+
+        Blade::directive('ilsawnTranslations', function (): string {
+            return <<<'PHP'
+            <?php
+                $__locale = app()->getLocale();
+                $__path   = lang_path($__locale . '.json');
+                $__data   = file_exists($__path)
+                    ? (json_decode(file_get_contents($__path), true) ?? [])
+                    : [];
+                echo '<script>window.__ilsawn = ' . json_encode($__data, JSON_HEX_TAG | JSON_HEX_QUOT) . ';</script>';
+            ?>
+            PHP;
+        });
 
         $this->registerRoutes();
     }
@@ -81,6 +95,6 @@ class LaravelIlsawnServiceProvider extends PackageServiceProvider
             )
         )
             ->prefix((string) config('ilsawn.route_prefix', 'ilsawn'))
-            ->group(__DIR__ . '/../routes/web.php');
+            ->group(__DIR__.'/../routes/web.php');
     }
 }

@@ -1,14 +1,15 @@
 <?php
 
-use ilsawn\LaravelIlsawn\SharesTranslations;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use ilsawn\LaravelIlsawn\SharesTranslations;
 
 // Concrete class used to exercise the trait
 function makeTranslationsMiddleware(): object
 {
-    return new class {
+    return new class
+    {
         use SharesTranslations;
 
         public function get(Request $request): array
@@ -23,9 +24,9 @@ function makeTranslationsMiddleware(): object
 // ---------------------------------------------------------------------------
 
 beforeEach(function () {
-    $this->tmpLang  = sys_get_temp_dir() . '/ilsawn-lang-' . uniqid();
-    $this->request  = Request::create('/');
-    $this->subject  = makeTranslationsMiddleware();
+    $this->tmpLang = sys_get_temp_dir().'/ilsawn-lang-'.uniqid();
+    $this->request = Request::create('/');
+    $this->subject = makeTranslationsMiddleware();
 
     File::makeDirectory($this->tmpLang, 0755, true);
     $this->app->useLangPath($this->tmpLang);
@@ -48,7 +49,7 @@ it('returns an empty array when no JSON file exists for the locale', function ()
 
 it('loads translations from the locale JSON file', function () {
     app()->setLocale('en');
-    file_put_contents($this->tmpLang . '/en.json', json_encode(['hello' => 'Hello', 'bye' => 'Goodbye']));
+    file_put_contents($this->tmpLang.'/en.json', json_encode(['hello' => 'Hello', 'bye' => 'Goodbye']));
 
     $result = $this->subject->get($this->request);
 
@@ -57,7 +58,7 @@ it('loads translations from the locale JSON file', function () {
 
 it('returns an empty array when the JSON file is invalid', function () {
     app()->setLocale('en');
-    file_put_contents($this->tmpLang . '/en.json', 'not valid json');
+    file_put_contents($this->tmpLang.'/en.json', 'not valid json');
 
     expect($this->subject->get($this->request))->toBeEmpty();
 });
@@ -70,10 +71,10 @@ it('reflects file changes immediately in the local environment', function () {
     $this->app->detectEnvironment(fn () => 'local');
     app()->setLocale('en');
 
-    file_put_contents($this->tmpLang . '/en.json', json_encode(['key' => 'first']));
+    file_put_contents($this->tmpLang.'/en.json', json_encode(['key' => 'first']));
     $first = $this->subject->get($this->request);
 
-    file_put_contents($this->tmpLang . '/en.json', json_encode(['key' => 'second']));
+    file_put_contents($this->tmpLang.'/en.json', json_encode(['key' => 'second']));
     $second = $this->subject->get($this->request);
 
     expect($first['key'])->toBe('first')
@@ -88,19 +89,19 @@ it('caches translations in non-local environments', function () {
     // Testbench runs as 'testing', which is non-local → cache is active
     app()->setLocale('en');
 
-    file_put_contents($this->tmpLang . '/en.json', json_encode(['key' => 'first']));
+    file_put_contents($this->tmpLang.'/en.json', json_encode(['key' => 'first']));
     $this->subject->get($this->request);   // primes the cache
 
     // Modify the file — cached value should be returned
-    file_put_contents($this->tmpLang . '/en.json', json_encode(['key' => 'second']));
+    file_put_contents($this->tmpLang.'/en.json', json_encode(['key' => 'second']));
     $result = $this->subject->get($this->request);
 
     expect($result['key'])->toBe('first');
 });
 
 it('uses a separate cache entry per locale', function () {
-    file_put_contents($this->tmpLang . '/en.json', json_encode(['key' => 'English']));
-    file_put_contents($this->tmpLang . '/fr.json', json_encode(['key' => 'French']));
+    file_put_contents($this->tmpLang.'/en.json', json_encode(['key' => 'English']));
+    file_put_contents($this->tmpLang.'/fr.json', json_encode(['key' => 'French']));
 
     app()->setLocale('en');
     $en = $this->subject->get($this->request);
@@ -114,7 +115,7 @@ it('uses a separate cache entry per locale', function () {
 
 it('stores translations under an ilsawn-prefixed cache key', function () {
     app()->setLocale('en');
-    file_put_contents($this->tmpLang . '/en.json', json_encode(['key' => 'Hello']));
+    file_put_contents($this->tmpLang.'/en.json', json_encode(['key' => 'Hello']));
 
     $this->subject->get($this->request);
 
