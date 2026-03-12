@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.2 - 2026-03-12
+
+### Bug fix
+
+- **Fixed STDIN crash on Scan button** — the scan action was calling
+  `ilsawn:generate --remove-duplicates` via Artisan, which triggers an
+  interactive `confirm()` prompt that crashes with
+  `Undefined constant "STDIN"` in a Livewire (HTTP) context.
+  The scan now calls the service directly, identical to how cleanup works.
+
 ## v1.0.1 - 2026-03-12
 
 ### Bug fixes
