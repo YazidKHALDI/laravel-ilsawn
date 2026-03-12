@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use ilsawn\LaravelIlsawn\Livewire\TranslationsTable;
@@ -34,7 +35,7 @@ afterEach(function () {
 // ---------------------------------------------------------------------------
 
 it('returns 200 at the configured route prefix', function () {
-    $user = new \Illuminate\Foundation\Auth\User;
+    $user = new User;
 
     $this->actingAs($user)->get('/ilsawn')->assertOk();
 });
@@ -42,7 +43,7 @@ it('returns 200 at the configured route prefix', function () {
 it('returns 403 when the viewIlsawn gate denies access', function () {
     Gate::define('viewIlsawn', fn () => false);
 
-    $user = new \Illuminate\Foundation\Auth\User;
+    $user = new User;
 
     $this->actingAs($user)->get('/ilsawn')->assertForbidden();
 });

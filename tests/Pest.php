@@ -19,7 +19,7 @@ function writeCsvFile(string $path, array $rows, string $delimiter = ';'): void
     $handle = fopen($path, 'w');
 
     if ($handle === false) {
-        throw new \RuntimeException("Cannot open for writing: {$path}");
+        throw new RuntimeException("Cannot open for writing: {$path}");
     }
 
     foreach ($rows as $row) {
