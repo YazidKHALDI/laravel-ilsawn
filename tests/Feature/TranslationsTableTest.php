@@ -174,5 +174,5 @@ it('autoTranslate is a no-op when laravel/ai is not installed', function () {
 it('scan action sets a confirmation message', function () {
     Livewire::test(TranslationsTable::class)
         ->call('scan')
-        ->assertDispatched('flash', message: 'Scan complete — new keys added to CSV.', type: 'success');
+        ->assertDispatched('flash', message: 'Scan complete — new keys added, framework duplicates removed.', type: 'success');
 });

@@ -45,7 +45,7 @@ trait SharesTranslations
      *
      * @return array<string, string>
      */
-    protected function translations(Request $request): array
+    protected function translations(Request $_request): array
     {
         $locale = app()->getLocale();
 
@@ -62,29 +62,85 @@ trait SharesTranslations
     }
 
     /**
-     * Read and decode the ilsawn-generated JSON file for the given locale.
+     * Load all translations for the given locale, merging three sources in order:
      *
-     * Returns an empty array if the file does not exist yet (e.g. before running
-     * ilsawn:generate for the first time), so the app never breaks.
+     *  1. PHP lang files from lang/{locale}/ (auth.php → "auth.failed", …)
+     *  2. JSON files from lang/{locale}/ (e.g. breeze.json from packages)
+     *  3. ilsawn-generated lang/{locale}.json — has highest priority, overwrites above
+     *
+     * Returns an empty array if no sources exist (e.g. before the first
+     * ilsawn:generate run), so the app never breaks.
      *
      * @return array<string, string>
      */
     private function loadTranslations(string $locale): array
     {
-        $path = lang_path("{$locale}.json");
+        $translations = [];
 
-        if (! file_exists($path)) {
-            return [];
+        $langDir = lang_path($locale);
+
+        // 1. PHP lang files — file basename becomes the key namespace prefix
+        if (is_dir($langDir)) {
+            foreach (glob("{$langDir}/*.php") ?: [] as $phpFile) {
+                $data = include $phpFile;
+                if (is_array($data)) {
+                    $prefix = pathinfo($phpFile, PATHINFO_FILENAME);
+                    $translations = array_merge($translations, $this->flattenWithPrefix($data, $prefix));
+                }
+            }
         }
 
-        $content = file_get_contents($path);
-
-        if ($content === false) {
-            return [];
+        // 2. JSON files in lang/{locale}/ (package files such as breeze.json)
+        if (is_dir($langDir)) {
+            foreach (glob("{$langDir}/*.json") ?: [] as $jsonFile) {
+                $content = file_get_contents($jsonFile);
+                if ($content !== false) {
+                    $data = json_decode($content, true);
+                    if (is_array($data)) {
+                        $translations = array_merge($translations, $data);
+                    }
+                }
+            }
         }
 
-        $decoded = json_decode($content, true);
+        // 3. ilsawn-generated lang/{locale}.json — overwrites any conflicts above
+        $ilsawnPath = lang_path("{$locale}.json");
+        if (file_exists($ilsawnPath)) {
+            $content = file_get_contents($ilsawnPath);
+            if ($content !== false) {
+                $data = json_decode($content, true);
+                if (is_array($data)) {
+                    $translations = array_merge($translations, $data);
+                }
+            }
+        }
 
-        return is_array($decoded) ? $decoded : [];
+        return $translations;
+    }
+
+    /**
+     * Recursively flatten a nested PHP lang array, prepending the given prefix.
+     *
+     * flattenWithPrefix(['required' => 'The :attribute field is required.'], 'validation')
+     * → ['validation.required' => 'The :attribute field is required.']
+     *
+     * @param  array<string, mixed>  $array
+     * @return array<string, string>
+     */
+    private function flattenWithPrefix(array $array, string $prefix): array
+    {
+        $result = [];
+
+        foreach ($array as $key => $value) {
+            $fullKey = "{$prefix}.{$key}";
+
+            if (is_array($value)) {
+                $result = array_merge($result, $this->flattenWithPrefix($value, $fullKey));
+            } else {
+                $result[$fullKey] = (string) $value;
+            }
+        }
+
+        return $result;
     }
 }

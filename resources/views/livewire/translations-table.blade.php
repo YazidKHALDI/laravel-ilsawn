@@ -42,6 +42,11 @@
                 <span wire:loading.remove wire:target="scan">Scan for new keys</span>
                 <span wire:loading wire:target="scan">Scanning…</span>
             </button>
+            <button wire:click="previewCleanup" wire:loading.attr="disabled"
+                class="px-4 py-2 text-sm font-medium bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 disabled:opacity-50">
+                <span wire:loading.remove wire:target="previewCleanup">Cleanup unused</span>
+                <span wire:loading wire:target="previewCleanup">Scanning…</span>
+            </button>
             <div class="relative">
                 <button wire:click="generate" wire:loading.attr="disabled"
                     class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50">
@@ -95,6 +100,8 @@
             Missing only
             @if ($onlyMissing)
                 <span class="ml-1 text-xs font-semibold">({{ count($this->rows) }})</span>
+            @elseif ($this->missingCount > 0)
+                <span class="ml-1 text-xs font-semibold text-amber-600">{{ $this->missingCount }}/{{ $this->totalCount }}</span>
             @endif
         </button>
     </div>
@@ -200,6 +207,53 @@
                 matching <em>{{ $search }}</em>
             @endif
         </p>
+    @endif
+
+
+    {{-- Cleanup preview modal --}}
+    @if ($cleanupPreview !== null)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-gray-900">Cleanup preview</h2>
+                    <button wire:click="dismissCleanupPreview" class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+                </div>
+
+                <div class="px-6 py-4">
+                    @if (count($cleanupPreview) === 0)
+                        <p class="text-sm text-gray-600">No unused keys found. Your CSV is clean.</p>
+                    @else
+                        <p class="text-sm text-gray-600 mb-3">
+                            <strong class="text-red-600">{{ count($cleanupPreview) }} key{{ count($cleanupPreview) > 1 ? 's' : '' }}</strong>
+                            not found in your code will be removed:
+                        </p>
+                        <ul class="max-h-64 overflow-y-auto divide-y divide-gray-100 border border-gray-200 rounded-lg text-xs font-mono">
+                            @foreach ($cleanupPreview as $key)
+                                <li class="px-3 py-1.5 text-red-700 bg-red-50">- {{ $key }}</li>
+                            @endforeach
+                        </ul>
+                        <p class="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+                            Dynamic keys (e.g. <code>__("status.$state")</code>) may appear here as false positives.
+                            Review before confirming.
+                        </p>
+                    @endif
+                </div>
+
+                <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-2">
+                    <button wire:click="dismissCleanupPreview"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    @if (count($cleanupPreview) > 0)
+                        <button wire:click="confirmCleanup" wire:loading.attr="disabled"
+                            class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50">
+                            <span wire:loading.remove wire:target="confirmCleanup">Delete {{ count($cleanupPreview) }} key{{ count($cleanupPreview) > 1 ? 's' : '' }}</span>
+                            <span wire:loading wire:target="confirmCleanup">Deleting…</span>
+                        </button>
+                    @endif
+                </div>
+            </div>
+        </div>
     @endif
 
 </div>

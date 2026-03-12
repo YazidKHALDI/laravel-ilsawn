@@ -332,14 +332,14 @@ it('marks keys as skipped when they exist in Laravel own lang files', function (
     File::put($langDir.'/auth.php', "<?php return ['failed' => 'Credentials do not match.'];");
 
     writeCsvFile($this->csvPath, [['key', 'en', 'fr', 'ar']]);
-    file_put_contents($this->scanPath.'/test.php', '<?php echo __("failed");');
+    file_put_contents($this->scanPath.'/test.php', '<?php echo __("auth.failed");');
 
     $result = $this->service->scanForNewKeys($this->service->loadCsv());
 
     File::deleteDirectory($langDir);
 
-    expect($result['skipped'])->toHaveKey('failed')
-        ->and($result['missing'])->not->toContain('failed');
+    expect($result['skipped'])->toHaveKey('auth.failed')
+        ->and($result['missing'])->not->toContain('auth.failed');
 });
 
 // ---------------------------------------------------------------------------
@@ -381,15 +381,15 @@ it('detects CSV keys that duplicate keys in Laravel lang files', function () {
 
     writeCsvFile($this->csvPath, [
         ['key', 'en', 'fr', 'ar'],
-        ['failed',     'Failed', '', ''],
-        ['unique.key', 'Unique', '', ''],
+        ['auth.failed', 'Failed', '', ''],
+        ['unique.key',  'Unique', '', ''],
     ]);
 
     $duplicates = $this->service->findDuplicatesInLangFiles($this->service->loadCsv());
 
     File::deleteDirectory($langDir);
 
-    expect($duplicates)->toHaveKey('failed')
+    expect($duplicates)->toHaveKey('auth.failed')
         ->and($duplicates)->not->toHaveKey('unique.key');
 });
 

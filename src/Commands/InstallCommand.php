@@ -47,7 +47,7 @@ class InstallCommand extends Command
     private function publishConfig(): void
     {
         $this->callSilently('vendor:publish', [
-            '--tag' => 'laravel-ilsawn-config',
+            '--tag' => 'ilsawn-config',
             '--force' => $this->option('force'),
         ]);
 
@@ -155,7 +155,7 @@ class InstallCommand extends Command
     private function printBladeJsInstructions(): void
     {
         $this->callSilently('vendor:publish', [
-            '--tag' => 'laravel-ilsawn-js',
+            '--tag' => 'ilsawn-js',
             '--force' => $this->option('force'),
         ]);
 
@@ -176,7 +176,7 @@ class InstallCommand extends Command
     private function printJsHookInstructions(): void
     {
         $this->callSilently('vendor:publish', [
-            '--tag' => 'laravel-ilsawn-js',
+            '--tag' => 'ilsawn-js',
             '--force' => $this->option('force'),
         ]);
 

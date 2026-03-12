@@ -20,8 +20,8 @@ class LaravelIlsawnServiceProvider extends PackageServiceProvider
             ->name('laravel-ilsawn')
             /*
              * Registers config/ilsawn.php and makes it publishable under the
-             * "laravel-ilsawn-config" tag. Values are accessible via config('ilsawn.*').
-             * The filename argument must match the config file name, not the package name.
+             * "ilsawn-config" tag (Spatie strips the "laravel-" prefix via shortName()).
+             * Values are accessible via config('ilsawn.*').
              */
             ->hasConfigFile('ilsawn')
             /*
@@ -35,14 +35,14 @@ class LaravelIlsawnServiceProvider extends PackageServiceProvider
     public function bootingPackage(): void
     {
         /*
-         * Publish the JS hooks under the "laravel-ilsawn-js" tag so users can
+         * Publish the JS hooks under the "ilsawn-js" tag so users can
          * copy only the adapter(s) they need:
          *
-         *   php artisan vendor:publish --tag=laravel-ilsawn-js
+         *   php artisan vendor:publish --tag=ilsawn-js
          */
         $this->publishes([
             __DIR__.'/../resources/js' => resource_path('js/vendor/ilsawn'),
-        ], 'laravel-ilsawn-js');
+        ], 'ilsawn-js');
 
         Livewire::component('ilsawn-translations-table', TranslationsTable::class);
 

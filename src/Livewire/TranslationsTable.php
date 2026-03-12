@@ -30,6 +30,9 @@ class TranslationsTable extends Component
 
     public int $pendingScanCount = 0;
 
+    /** @var string[]|null null = modal closed, [] = open with no unused keys */
+    public ?array $cleanupPreview = null;
+
     // -------------------------------------------------------------------------
     // Computed
     // -------------------------------------------------------------------------
@@ -69,6 +72,23 @@ class TranslationsTable extends Component
     public function locales(): array
     {
         return (array) config('ilsawn.locales', ['en']);
+    }
+
+    #[Computed]
+    public function totalCount(): int
+    {
+        return count(app(LaravelIlsawn::class)->loadCsv());
+    }
+
+    #[Computed]
+    public function missingCount(): int
+    {
+        $locales = $this->locales;
+
+        return count(array_filter(
+            app(LaravelIlsawn::class)->loadCsv(),
+            fn (array $row) => collect($locales)->some(fn (string $locale) => ($row[$locale] ?? '') === '')
+        ));
     }
 
     #[Computed]
@@ -180,10 +200,39 @@ class TranslationsTable extends Component
 
     public function scan(): void
     {
-        Artisan::call('ilsawn:generate', ['--scan' => true]);
+        Artisan::call('ilsawn:generate', ['--scan' => true, '--remove-duplicates' => true]);
         unset($this->rows);
         $this->pendingScanCount = 0;
-        $this->flash('Scan complete — new keys added to CSV.');
+        $this->flash('Scan complete — new keys added, framework duplicates removed.');
+    }
+
+    public function previewCleanup(): void
+    {
+        $ilsawn = app(LaravelIlsawn::class);
+        $this->cleanupPreview = $ilsawn->findUnusedKeys($ilsawn->loadCsv());
+    }
+
+    public function confirmCleanup(): void
+    {
+        if (empty($this->cleanupPreview)) {
+            $this->cleanupPreview = null;
+
+            return;
+        }
+
+        $ilsawn = app(LaravelIlsawn::class);
+        $rows = $ilsawn->removeKeys($ilsawn->loadCsv(), $this->cleanupPreview);
+        $ilsawn->saveCsv($rows);
+        $ilsawn->generateJsonFiles($rows);
+
+        $this->cleanupPreview = null;
+        unset($this->rows);
+        $this->flash('Cleanup complete — unused keys removed from CSV.');
+    }
+
+    public function dismissCleanupPreview(): void
+    {
+        $this->cleanupPreview = null;
     }
 
     // -------------------------------------------------------------------------

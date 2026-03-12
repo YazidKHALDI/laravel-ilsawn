@@ -392,7 +392,8 @@ class LaravelIlsawn
     // -------------------------------------------------------------------------
 
     /**
-     * Load Laravel's standard PHP lang files into memory (runs once per instance).
+     * Load Laravel's standard PHP lang files and any JSON files found in locale
+     * subdirectories (e.g. lang/fr/breeze.json) into memory (runs once per instance).
      */
     private function loadStandardLangFiles(): void
     {
@@ -403,6 +404,7 @@ class LaravelIlsawn
         foreach ($this->locales as $locale) {
             $langDir = base_path("lang/{$locale}");
 
+            // PHP built-ins (auth.php, pagination.php, passwords.php, validation.php)
             foreach (self::STANDARD_LANG_FILES as $file) {
                 $filePath = "{$langDir}/{$file}";
 
@@ -413,16 +415,38 @@ class LaravelIlsawn
                     }
                 }
             }
+
+            // Any JSON files placed in lang/{locale}/ (e.g. breeze.json from packages)
+            if (is_dir($langDir)) {
+                foreach (glob("{$langDir}/*.json") ?: [] as $jsonFile) {
+                    $content = File::get($jsonFile);
+                    $translations = json_decode($content, true);
+                    if (is_array($translations)) {
+                        $this->loadedLangFiles["{$locale}/".basename($jsonFile)] = $translations;
+                    }
+                }
+            }
         }
     }
 
     /**
      * Return the filename if $key exists in any loaded lang file, null otherwise.
+     *
+     * PHP files use the filename as the namespace prefix:
+     *   auth.php  → keys are "auth.failed", "auth.throttle", …
+     *
+     * JSON files in locale subdirs already store flat keys with no prefix:
+     *   breeze.json → keys are "Email", "Password", …
      */
     private function keyExistsInLangFiles(string $key): ?string
     {
         foreach ($this->loadedLangFiles as $file => $translations) {
-            if ($this->keyExistsIn($key, $translations)) {
+            // For PHP files the file basename IS the first key segment (Laravel namespace).
+            $prefix = str_ends_with($file, '.php')
+                ? pathinfo($file, PATHINFO_FILENAME)
+                : '';
+
+            if ($this->keyExistsIn($key, $translations, $prefix)) {
                 return $file;
             }
         }
