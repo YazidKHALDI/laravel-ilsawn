@@ -200,7 +200,24 @@ class TranslationsTable extends Component
 
     public function scan(): void
     {
-        Artisan::call('ilsawn:generate', ['--scan' => true, '--remove-duplicates' => true]);
+        $ilsawn = app(LaravelIlsawn::class);
+        $csvData = $ilsawn->loadCsv();
+
+        // Remove keys that duplicate Laravel's own lang files
+        $duplicates = $ilsawn->findDuplicatesInLangFiles($csvData);
+        if (! empty($duplicates)) {
+            $csvData = $ilsawn->removeKeys($csvData, array_keys($duplicates));
+        }
+
+        // Add missing keys found in source files
+        ['missing' => $missing] = $ilsawn->scanForNewKeys($csvData);
+        if (! empty($missing)) {
+            $csvData = $ilsawn->addMissingKeys($csvData, $missing);
+        }
+
+        $ilsawn->saveCsv($csvData);
+        $ilsawn->generateJsonFiles($csvData);
+
         unset($this->rows);
         $this->pendingScanCount = 0;
         $this->flash('Scan complete — new keys added, framework duplicates removed.');
