@@ -6,6 +6,19 @@ use Illuminate\Support\Facades\File;
 
 class LaravelIlsawn
 {
+    /** @var \Closure|null */
+    public static $authUsing;
+
+    public static function auth(\Closure $callback): void
+    {
+        static::$authUsing = $callback;
+    }
+
+    public static function check(\Illuminate\Http\Request $request): bool
+    {
+        return (static::$authUsing ?: fn () => app()->environment('local'))($request);
+    }
+
     /**
      * Laravel's built-in PHP lang files.
      * Keys in these files belong to the framework and must not be duplicated in the CSV.
