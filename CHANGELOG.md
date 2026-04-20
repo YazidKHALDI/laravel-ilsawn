@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.1.0 - 2026-04-20
+
+### Changed
+
+- **Telescope-style authorization** — replaced the `viewIlsawn` Gate with `LaravelIlsawn::auth()`.
+  In local environment access is always granted (no login required).
+  In production, register a callback in your published `IlsawnServiceProvider`:
+  ```php
+  LaravelIlsawn::auth(function (Request $request) {
+      return $request->user() && in_array($request->user()->email, [
+          'you@example.com',
+      ]);
+  });
+  ```
+  > **Upgrade note:** if you published `IlsawnServiceProvider` before v1.1.0, replace the `Gate::define('viewIlsawn', ...)` block with the `LaravelIlsawn::auth()` call above.
+
 ## v1.0.2 - 2026-03-12
 
 ### Bug fix

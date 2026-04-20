@@ -2,7 +2,7 @@
 
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Gate;
+use ilsawn\LaravelIlsawn\LaravelIlsawn;
 use ilsawn\LaravelIlsawn\Livewire\TranslationsTable;
 use Livewire\Livewire;
 
@@ -19,10 +19,12 @@ beforeEach(function () {
         ['nav.home',   'Home',    'Accueil',  ''],
     ]);
 
-    Gate::define('viewIlsawn', fn () => true);
+    LaravelIlsawn::auth(fn () => true);
 });
 
 afterEach(function () {
+    LaravelIlsawn::$authUsing = null;
+
     @unlink($this->csvPath);
 
     foreach ((array) config('ilsawn.locales', []) as $locale) {
@@ -40,8 +42,8 @@ it('returns 200 at the configured route prefix', function () {
     $this->actingAs($user)->get('/ilsawn')->assertOk();
 });
 
-it('returns 403 when the viewIlsawn gate denies access', function () {
-    Gate::define('viewIlsawn', fn () => false);
+it('returns 403 when auth callback denies access', function () {
+    LaravelIlsawn::auth(fn () => false);
 
     $user = new User;
 

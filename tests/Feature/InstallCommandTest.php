@@ -103,12 +103,12 @@ it('publishes the IlsawnServiceProvider', function () {
     expect(file_exists(app_path('Providers/IlsawnServiceProvider.php')))->toBeTrue();
 });
 
-it('published provider contains the viewIlsawn gate definition', function () {
+it('published provider contains the LaravelIlsawn::auth call', function () {
     $this->artisan('ilsawn:install');
 
     $content = file_get_contents(app_path('Providers/IlsawnServiceProvider.php'));
 
-    expect($content)->toContain('viewIlsawn');
+    expect($content)->toContain('LaravelIlsawn::auth');
 });
 
 it('does not overwrite an existing IlsawnServiceProvider', function () {

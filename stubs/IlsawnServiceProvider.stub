@@ -2,7 +2,8 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Gate;
+use ilsawn\LaravelIlsawn\LaravelIlsawn;
+use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 
 class IlsawnServiceProvider extends ServiceProvider
@@ -12,20 +13,19 @@ class IlsawnServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->gate();
+        $this->authorization();
     }
 
     /**
-     * Register the Ilsawn gate.
+     * Configure the Ilsawn authorization.
      *
-     * This gate controls who can access the Ilsawn translation management UI.
-     * Add the email addresses of users who should have access, or replace the
-     * closure body with any authorization logic you prefer.
+     * By default, access is granted only in the local environment.
+     * In production, uncomment the block below and add authorized emails.
      */
-    protected function gate(): void
+    protected function authorization(): void
     {
-        Gate::define('viewIlsawn', function ($user) {
-            return in_array($user->email, [
+        LaravelIlsawn::auth(function (Request $request) {
+            return $request->user() && in_array($request->user()->email, [
                 //
             ]);
         });
