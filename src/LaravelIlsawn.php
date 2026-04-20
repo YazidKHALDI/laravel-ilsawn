@@ -2,6 +2,7 @@
 
 namespace ilsawn\LaravelIlsawn;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
 class LaravelIlsawn
@@ -14,7 +15,7 @@ class LaravelIlsawn
         static::$authUsing = $callback;
     }
 
-    public static function check(\Illuminate\Http\Request $request): bool
+    public static function check(Request $request): bool
     {
         return (static::$authUsing ?: fn () => app()->environment('local'))($request);
     }
