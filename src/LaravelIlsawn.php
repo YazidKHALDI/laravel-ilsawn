@@ -4,6 +4,7 @@ namespace ilsawn\LaravelIlsawn;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Gate;
 
 class LaravelIlsawn
 {
@@ -17,7 +18,20 @@ class LaravelIlsawn
 
     public static function check(Request $request): bool
     {
-        return (static::$authUsing ?: fn () => app()->environment('local'))($request);
+        if (static::$authUsing) {
+            return (bool) (static::$authUsing)($request);
+        }
+
+        // Before v1.1.0 the published IlsawnServiceProvider defined a `viewIlsawn` gate. Apps
+        // that never migrated to LaravelIlsawn::auth() keep working instead of getting a
+        // silent 403 in production. The gate is only asked for a logged-in user.
+        if (Gate::has('viewIlsawn')) {
+            $user = $request->user();
+
+            return $user !== null && Gate::forUser($user)->allows('viewIlsawn');
+        }
+
+        return app()->environment('local');
     }
 
     /**

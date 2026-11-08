@@ -1,6 +1,9 @@
 <?php
 
+use Illuminate\Foundation\Auth\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Gate;
 use ilsawn\LaravelIlsawn\LaravelIlsawn;
 
 // ---------------------------------------------------------------------------
@@ -400,4 +403,50 @@ it('returns an empty array when no duplicates exist', function () {
     ]);
 
     expect($this->service->findDuplicatesInLangFiles($this->service->loadCsv()))->toBeEmpty();
+});
+
+// ---------------------------------------------------------------------------
+// Authorization
+// ---------------------------------------------------------------------------
+
+function ilsawnRequest(?string $email): Request
+{
+    $user = null;
+
+    if ($email !== null) {
+        $user = new User;
+        $user->email = $email;
+    }
+
+    return tap(Request::create('/ilsawn'), fn (Request $request) => $request->setUserResolver(fn () => $user));
+}
+
+afterEach(function () {
+    LaravelIlsawn::$authUsing = null;
+});
+
+it('denies everyone outside the local environment when nothing is registered', function () {
+    expect(app()->environment('local'))->toBeFalse()
+        ->and(LaravelIlsawn::check(ilsawnRequest('admin@example.com')))->toBeFalse()
+        ->and(LaravelIlsawn::check(ilsawnRequest(null)))->toBeFalse();
+});
+
+it('honours the legacy viewIlsawn gate when no auth callback is registered', function () {
+    Gate::define('viewIlsawn', fn ($user) => $user->email === 'admin@example.com');
+
+    expect(LaravelIlsawn::check(ilsawnRequest('admin@example.com')))->toBeTrue()
+        ->and(LaravelIlsawn::check(ilsawnRequest('someone@example.com')))->toBeFalse();
+});
+
+it('denies guests with the legacy gate without calling it', function () {
+    Gate::define('viewIlsawn', fn ($user) => $user->email === 'admin@example.com');
+
+    expect(LaravelIlsawn::check(ilsawnRequest(null)))->toBeFalse();
+});
+
+it('prefers the auth callback over the legacy gate', function () {
+    Gate::define('viewIlsawn', fn () => true);
+    LaravelIlsawn::auth(fn () => false);
+
+    expect(LaravelIlsawn::check(ilsawnRequest('admin@example.com')))->toBeFalse();
 });

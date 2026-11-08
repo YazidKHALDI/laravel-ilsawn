@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.1.1 - 2026-11-08
+
+### Fixed
+
+- **Apps that published `IlsawnServiceProvider` before v1.1.0 got a 403 in production** —
+  v1.1.0 dropped the `viewIlsawn` gate without a fallback, so such apps were silently denied
+  everywhere except the local environment. The gate is honoured again when no
+  `LaravelIlsawn::auth()` callback is registered (logged-in users only). It is deprecated:
+  prefer `LaravelIlsawn::auth()`.
+
+### Docs
+
+- The Authorization section of the README documents `LaravelIlsawn::auth()` instead of the gate.
+
 ## v1.1.0 - 2026-04-20
 
 ### Changed
