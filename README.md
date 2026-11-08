@@ -353,18 +353,29 @@ Visit `/ilsawn` (or your configured `route_prefix`) to access the translation ma
 
 ## Authorization
 
-`ilsawn:install` publishes `app/Providers/IlsawnServiceProvider.php`:
+By default the UI is only available in the `local` environment. `ilsawn:install` publishes
+`app/Providers/IlsawnServiceProvider.php`, where you decide who can access it elsewhere
+(same idea as Laravel Telescope):
 
 ```php
-Gate::define('viewIlsawn', function ($user) {
-    return in_array($user->email, [
+use Illuminate\Http\Request;
+use ilsawn\LaravelIlsawn\LaravelIlsawn;
+
+LaravelIlsawn::auth(function (Request $request) {
+    return app()->environment('local') || ($request->user() && in_array($request->user()->email, [
         'admin@example.com',
-    ]);
+    ]));
 });
 ```
 
 Replace the closure body with any logic you need — role checks, environment guards, etc.
-The UI returns 403 for anyone the gate denies.
+The UI returns 403 for anyone the callback denies. Once you register a callback, the
+`local` shortcut no longer applies, so keep `app()->environment('local')` in it if you
+want it.
+
+**Upgrading from before v1.1.0:** the `viewIlsawn` gate is deprecated. It is still honoured
+when no `LaravelIlsawn::auth()` callback is registered (for logged-in users only), but new
+code should use `LaravelIlsawn::auth()`.
 
 ---
 
